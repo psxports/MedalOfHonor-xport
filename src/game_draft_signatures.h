@@ -4,6 +4,8 @@
 #include "xport.h"
 #define MOH_BYTE2(value) (((uint32)(value) >> 16) & 255u)
 #define MOH_HIBYTE(value) (((uint32)(value) >> 8) & 255u)
+void moh_draft_fail_fast(const char *operation, uint32 address);
+uint32 moh_native_music_enabled(void);
 
 /* Unverified draft ABI; integration is deferred */
 /* TODO Draft ABI and unresolved volatile argument carriers */
@@ -291,8 +293,33 @@ uint32 moh_native_load_resource(uint32 filename, uint32 destination, uint32 capa
 sint32 moh_native_load_overlay(uint32 filename, uint32 destination);
 uint32 moh_native_cd_reset(void);
 uint32 moh_draft_missing_call(uint32 address, ...);
+uint32 sub_8001DB60(uint32 value);
+uint32 sub_8001AF98(uint32 rotation, uint32 matrix);
+uint32 sub_800165D8(uint32 matrix, uint32 scale);
 uint32 moh_draft_indirect_call(uint32 target, ...);
 void *moh_draft_guest_pointer(uint32 address, uint32 bytes);
 uint32 moh_draft_local_address(const void *buffer, uint32 bytes);
+uint32 sub_80036DA0(uint32 size, uint32 count);
+uint32 sub_80036DC4(uint32 size, uint32 count, uint32 owner, uint32 flags);
+uint32 moh_native_asset_lba(const char *name);
+uint32 moh_native_find_asset(uint32 result, uint32 filename);
+uint32 sub_80016718(uint32 size);
+uint32 sub_80016248(sint32 angle, uint32 matrix);
+uint32 sub_80016218(uint32 matrix, uint32 translation);
+uint32 sub_80016B30(uint32 input, uint32 output, uint32 flags_out);
+uint32 sub_80016A10(uint32 input, uint32 output);
+uint32 sub_80016578(uint32 left, uint32 right, uint32 output);
+uint32 sub_800163E8(uint32 matrix, uint32 input, uint32 output);
+uint32 sub_80011AB0(uint32 node);
+uint32 sub_80011214(uint32 next_triangle, uint32 vertices);
+void sub_800114B0(uint32 region, uint32 vertices, uint32 colors_out);
+uint32 sub_8001BC68(uint32 input);
+void sub_80013AE4(uint32 node, uint32 matrix, uint32 output, uint32 render);
+uint32 sub_80013E58(uint32 quaternion, uint32 matrix);
+void sub_80013F98(uint32 ordering_tag, uint32 last, uint32 end);
+uint32 sub_80010B60(uint32 packet, uint32 end, uint32 region, uint32 ordering_table);
+uint32 sub_80010000(uint32 triangle, uint32 packet, uint32 mask, uint32 depth);
+uint32 sub_80010A7C(uint32 triangle, uint32 packet);
+uint32 sub_8001556C(uint32 input, uint32 output);
 
 #endif

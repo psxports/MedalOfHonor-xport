@@ -1836,10 +1836,14 @@ uint32 shell_sub_8004D9D8(void)
     uint32 screen = r_u32(0x8007BA68u), result = 0u, callback, index, buffer, packet;
     PSX_RECT rectangle = {0, 0, 512, 480};
     FUNCTION_MARKER(0x8004D9D8u, "SHELL.BIN");
+    if (moh_native_movie_screen(screen)) return 0u;
     for (index = 0u; index < 3u; ++index)
     {
         callback = r_u32(screen + callback_offsets[index]);
-        if (r_u8(screen + flag_offsets[index]) && callback) moh_draft_indirect_call(callback, screen);
+        if (r_u8(screen + flag_offsets[index]) && callback) {
+            moh_draft_indirect_call(callback, screen);
+            if (!index) moh_native_note_screen_initialized(screen);
+        }
     }
     callback = r_u32(screen + 108u);
     if (r_u8(screen + 120u) && callback) result = moh_draft_indirect_call(callback, screen);
@@ -2708,8 +2712,7 @@ void shell_sub_8005FE04(void)
     if (!r_u32(0x80039C5Cu)) moh_draft_missing_call(0x8006118Cu, 4u);
     moh_draft_missing_call(0x8004A8BCu);
     if (!r_u32(0x80039C5Cu)) moh_draft_missing_call(0x8006118Cu, 4u);
-    /* Skip optional startup movies in the native port */
-    if (r_u32(0x80039C5Cu)) name = 0x8003A158u;
+    if (r_u32(0x80039C5Cu)) name = 0x8003AA5Cu;
     else
     {
         level_mode = r_u32(0x80039D1Cu); flow = r_u32(0x80039C58u);
@@ -2798,7 +2801,7 @@ uint32 shell_sub_8005FC28(void)
         w_u32(0x8007BFDCu, r_u32(0x8007BFDCu) + 1u);
         if (r_u8(0x8007BFFDu) || moh_draft_missing_call(0x8004D9D8u) == 1u) break;
         frame = r_u32(0x8007BF4Cu);
-        w_u32(0x8007BF88u, sub_80016E38(0u));
+        w_u32(0x8007BF88u, moh_native_draw_sync(0u));
         if (r_u8(0x8007BF98u))
         {
             packet = r_u32(0x8007BF9Cu);
@@ -2807,8 +2810,8 @@ uint32 shell_sub_8005FC28(void)
             w_u32(0x8007BFA4u, 0u);
         }
         w_u32(0x8007BF8Cu, moh_draft_missing_call(0x80015DB8u, 2u));
-        sub_80017408(frame + 0x5Cu);
-        sub_80017348(frame);
+        moh_native_put_disp_env(frame + 0x5Cu);
+        moh_native_put_draw_env(frame);
         moh_draft_missing_call(0x800172D8u, r_u32(frame + 0x74u) + 0x17FCu);
     }
     /* TODO Translate shell shutdown */

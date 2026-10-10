@@ -86,8 +86,7 @@ uint32 sub_8001F67C(uint32 a1, uint32 a2, uint32 a3)
 }
 uint32 sub_80016E38(uint32 a1)
 {
-    if (r_u8(0x8002DF1Au) >= 2u) moh_draft_indirect_call(r_u32(0x8002DF14u), 0x800148CCu, a1);
-    return moh_draft_indirect_call(r_u32(r_u32(0x8002DF10u) + 60u), a1);
+    return (uint32)DrawSync((sint32)a1);
 }
 uint32 sub_80022D74(uint32 a1)
 {
@@ -237,8 +236,8 @@ void sub_80037060(void)
         sub_80016B60(3u); sub_80016E38(0u);
         for (i = 0u; i < 4u; ++i) moh_draft_missing_call(0x80015DB8u, 0u);
         sub_8001AF88();
-        for (i = 0u; i < 4u; ++i) moh_draft_missing_call(0x8001AB5Cu, i);
-        sub_80016B60(1u); sub_8001D0F0(moh_draft_missing_call(0x800371F8u)); moh_draft_missing_call(0x80019640u, 0u); sub_8001D1B0(0u);
+        for (i = 0u; i < 4u; ++i) moh_draft_missing_call(0x8001AB5Cu, 0xF2000000u | i);
+        sub_80016B60(1u); sub_8001D0F0(0u); moh_draft_missing_call(0x80019640u, 0u); sub_8001D1B0(0u);
         moh_draft_missing_call(0x8001D140u, 0u); moh_draft_missing_call(0x80016D40u, 0u); sub_8001CB08(0u);
         for (i = 0u; i < 10u; ++i) { sub_8001CAA8(0u, 0u); moh_draft_missing_call(0x80015B28u, 0x80039D14u, i); }
         moh_draft_missing_call(0x8001CB6Cu); sub_8001AD38(); sub_80016B60(3u);

@@ -23,12 +23,40 @@
   <ItemGroup><ClCompile Include="..\..\game_main.c" /><ClCompile Include="..\..\game_except.c" /><ClCompile Include="..\..\..\..\xport\src\psx.c" /><ClCompile Include="..\..\..\..\xport\src\psx_gpu.c" /><ClCompile Include="..\..\..\..\xport\src\psx_spu.c" /><ClCompile Include="..\..\..\..\xport\src\xport_trace.c" /><ClCompile Include="..\..\..\..\xport\src\platform\win\main.c"><ObjectFileName>$(IntDir)xport_main.obj</ObjectFileName></ClCompile></ItemGroup>
   <ItemGroup><ClInclude Include="..\..\..\..\xport\src\xport.h" /><ClInclude Include="..\..\..\..\xport\src\psx.h" /><ClInclude Include="..\..\..\..\xport\src\xport_trace.h" /><ClInclude Include="..\..\..\..\xport\src\psx_gpu.h" /><ClInclude Include="..\..\..\..\xport\src\psx_spu.h" /></ItemGroup>
   <ItemDefinitionGroup Condition="'$(LockstepDebug)'=='true'"><ClCompile><PreprocessorDefinitions>LOCKSTEP_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile></ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile><DebugInformationFormat>ProgramDatabase</DebugInformationFormat></ClCompile>
+    <Link><GenerateDebugInformation>true</GenerateDebugInformation></Link>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 <ItemGroup><ClCompile Include="..\..\game_link_stubs.c" /></ItemGroup>
 <ItemGroup>
   <ClCompile Include="..\..\game_runtime.c" />
   <ClCompile Include="..\..\game_shell.c" />
   <ClCompile Include="..\..\game_batch1.c" />
+  <ClCompile Include="..\..\game_batch2.c" />
+  <ClCompile Include="..\..\game_batch3.c" />
+  <ClCompile Include="..\..\game_native_gpu.c" />
+  <ClCompile Include="..\..\game_native_video.c" />
+  <ClCompile Include="..\..\..\..\xport\src\psx_mdec.c" />
+  <ClCompile Include="..\..\..\..\xport\src\psx_press.c" />
+  <ClCompile Include="..\..\..\..\xport\src\psx_vlc.c" />
+  <ClCompile Include="..\..\..\..\xport\src\psx_stream.c" />
+  <ClCompile Include="..\..\game_level_main.c" />
+  <ClCompile Include="..\..\game_level_init.c" />
+  <ClCompile Include="..\..\game_level_native.c" />
+  <ClCompile Include="..\..\game_level_life.c" />
+  <ClCompile Include="..\..\game_level_camera.c" />
+  <ClCompile Include="..\..\game_level_player.c" />
+  <ClCompile Include="..\..\game_level_projectile.c" />
+  <ClCompile Include="..\..\game_level_motion.c" />
+  <ClCompile Include="..\..\game_level_render.c" />
+  <ClCompile Include="..\..\game_level_assets.c" />
+  <ClCompile Include="..\..\game_level_models.c" />
+  <ClCompile Include="..\..\game_level_properties.c" />
+  <ClCompile Include="..\..\game_level_script.c" />
+  <ClCompile Include="..\..\game_heap_native.c" />
+  <ClCompile Include="..\..\game_asset_index.c" />
+  <ClCompile Include="..\..\..\..\xport\src\psx_xa.c" />
   <ClCompile Include="..\..\game_draft_1.c" />
   <ClCompile Include="..\..\game_draft_2.c" />
   <ClCompile Include="..\..\game_draft_3.c" />

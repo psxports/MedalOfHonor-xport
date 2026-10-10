@@ -1,8 +1,121 @@
 #include "game_shell_signatures.h"
 #include "xport_trace.h"
+
+void shell_sub_80058FB0(uint32 screen)
+{
+    FUNCTION_MARKER(0x80058FB0u, "SHELL.BIN");
+    shell_sub_80058F8C(screen);
+    shell_sub_80045328(r_u32(screen + 80u));
+}
+
+void shell_sub_8003F038(uint32 screen)
+{
+    FUNCTION_MARKER(0x8003F038u, "SHELL.BIN");
+    shell_sub_8003F014(screen);
+    shell_sub_80045328(r_u32(screen + 80u));
+}
 #include "psx.h"
 #include <stdlib.h>
 #include <string.h>
+
+uint32 shell_sub_80045234(void)
+{
+    FUNCTION_MARKER(0x80045234u, "SHELL.BIN");
+    w_u32(0x8007A288u, 0u);
+    shell_sub_80045328(r_u32(0x8007A290u));
+    return 0u;
+}
+
+void shell_sub_8005FB50(uint32 clear)
+{
+    uint32 pointer, index;
+    PSX_RECT rectangle = {0, 0, 1024, 512};
+    FUNCTION_MARKER(0x8005FB50u, "SHELL.BIN");
+    if ((uint8)clear) ClearImage(&rectangle, 0u, 0u, 0u);
+    else {
+        moh_native_draw_sync(0u);
+        moh_draft_missing_call(0x80015DB8u, 2u);
+        moh_native_put_disp_env(0x8007BF30u);
+    }
+    pointer = r_u32(0x8007BF9Cu);
+    if (pointer) shell_sub_80045328(pointer);
+    shell_sub_80045328(r_u32(0x8007BF44u)); shell_sub_80045328(r_u32(0x8007BECCu));
+    shell_sub_80045328(r_u32(0x8007BF48u)); shell_sub_80045328(r_u32(0x8007BED0u));
+    for (index = 0u; index < 332u; ++index) w_u8(0x8007BE5Cu + index, 0u);
+}
+
+void shell_sub_8004E16C(uint32 data)
+{
+    uint32 screen = r_u32(data + 8u);
+    FUNCTION_MARKER(0x8004E16Cu, "SHELL.BIN");
+    w_u8(0x8007BA88u, 0u);
+    shell_sub_8004B894(screen); shell_sub_8004C328(screen); shell_sub_8004BAF0(screen);
+    w_u8(screen + 116u, 1u); w_u8(screen + 117u, 0u);
+}
+
+void shell_sub_80058F8C(uint32 screen)
+{
+    FUNCTION_MARKER(0x80058F8Cu, "SHELL.BIN");
+    shell_sub_8004E16C(r_u32(screen + 80u));
+}
+
+void shell_sub_8004DE14(void)
+{
+    uint32 index;
+    FUNCTION_MARKER(0x8004DE14u, "SHELL.BIN");
+    for (index = 0u; index < 128u; ++index) w_u8(0x8007BA98u + index, 0u);
+    w_u8(0x8007BA9Cu, 255u); w_u8(0x8007BA9Du, 255u); w_u8(0x8007BA9Eu, 255u);
+    w_u32(0x8007BB14u, 2u);
+    w_u32(0x8007BAC4u, r_u32(0x8007BA8Cu));
+    w_u8(0x8007BA88u, 0u);
+}
+
+void shell_sub_8004D794(uint32 color, uint32 first, uint32 second)
+{
+    uint32 start[3], end[3], delta[3], axis;
+    FUNCTION_MARKER(0x8004D794u, "SHELL.BIN");
+    for (axis = 0u; axis < 3u; ++axis) {
+        start[axis] = (uint32)r_u8(first + axis) << 16;
+        end[axis] = (uint32)r_u8(second + axis) << 16;
+    }
+    shell_sub_80063CF4(start, end, r_s32(color + 44u), delta);
+    for (axis = 0u; axis < 3u; ++axis) {
+        w_u32(color + 28u + axis * 4u, delta[axis]);
+        w_u32(color + 12u + axis * 4u, start[axis]);
+    }
+    /* TODO Original copies an uninitialized local padding word at color + 24 */
+}
+
+uint32 shell_sub_8004DE8C(uint32 color)
+{
+    uint32 buffer = r_u8(0x8007BF90u), page = GetTPage(0, 2, 0, 0), draw, packet, order;
+    uint8 saved = r_u8(0x8007BA78u), before, after;
+    uint32 initially_idle = !r_u32(color + 48u) && !r_u8(color + 52u);
+    FUNCTION_MARKER(0x8004DE8Cu, "SHELL.BIN");
+    w_u8(0x8007BA78u, 0u); before = r_u8(color + 52u);
+    shell_sub_8004D694(color); after = r_u8(color + 52u);
+    w_u8(0x8007BA78u, saved);
+    packet = color + buffer * 8u + 56u;
+    w_u8(packet + 3u, 1u);
+    draw = r_u32(0x8007BF4Cu);
+    page &= 0x9FFu;
+    if (r_u8(draw + 23u)) page |= 0x400u;
+    w_u32(packet + 4u, (r_u8(draw + 22u) ? 0xE1000200u : 0xE1000000u) | page);
+    order = r_u32(draw + 116u) + 4u;
+    w_u32(packet, (r_u32(packet) & 0xFF000000u) | (r_u32(order) & 0xFFFFFFu));
+    w_u32(order, (r_u32(order) & 0xFF000000u) | (packet & 0xFFFFFFu));
+    packet = color + buffer * 24u + 72u;
+    w_u8(packet + 3u, 5u); w_u8(packet + 7u, 0x2Au);
+    w_u8(packet + 4u, r_u8(color + 8u)); w_u8(packet + 5u, r_u8(color + 9u)); w_u8(packet + 6u, r_u8(color + 10u));
+    w_u16(packet + 8u, 0u); w_u16(packet + 10u, 0u);
+    w_u16(packet + 12u, 512u); w_u16(packet + 14u, 0u);
+    w_u16(packet + 16u, 0u); w_u16(packet + 18u, 240u);
+    w_u16(packet + 20u, 512u); w_u16(packet + 22u, 240u);
+    order = r_u32(r_u32(0x8007BF4Cu) + 116u);
+    w_u32(packet, (r_u32(packet) & 0xFF000000u) | (r_u32(order) & 0xFFFFFFu));
+    w_u32(order, (r_u32(order) & 0xFF000000u) | (packet & 0xFFFFFFu));
+    return before == after ? 0u : initially_idle ^ 1u;
+}
 
 uint32 shell_sub_80053150(uint32 model)
 {
@@ -338,7 +451,8 @@ uint32 shell_sub_8004BDB4(uint32 screen)
         memset(moh_draft_guest_pointer(0x8007BB5Cu, 40u), 0, 40u);
         for (offset = 0u; offset < 40u; ++offset) w_u8(0x8007BB5Cu + offset, r_u8(media + 36u + offset));
         w_u32(0x8007BB6Cu, r_u32(media + 28u)); w_u8(0x8007BB59u, r_u8(media + 32u) != 0u);
-        return (sint32)moh_draft_missing_call(0x80056CC8u, media) < 0 ? (uint32)-9 : 0u;
+        moh_native_play_movie(media);
+        return 0u;
     }
     for (item = r_u32(group + 120u); item; item = r_u32(item + 208u))
         moh_draft_missing_call(0x8004CFB4u, item, 1u);

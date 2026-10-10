@@ -2,6 +2,9 @@
 #define MOH_GAME_SHELL_SIGNATURES_H
 
 #include "game_draft_signatures.h"
+uint32 moh_native_movie_screen(uint32 screen);
+uint32 moh_native_play_movie(uint32 media);
+uint32 shell_title_find_screen(uint32 name, const char *host_name);
 
 uint32 shell_sub_8005FC28(void);
 void shell_sub_8005FE04(void);
@@ -152,6 +155,48 @@ uint32 shell_sub_8004BDB4(uint32 screen);
 
 void shell_sub_8004CFB4(uint32 image, uint32 mode);
 void shell_sub_8004D694(uint32 color);
+uint32 shell_sub_8004DE8C(uint32 color);
+void shell_sub_8004D794(uint32 color, uint32 first, uint32 second);
+uint32 shell_sub_80053418(uint32 model);
+void shell_sub_80053798(uint32 source, uint32 destination);
+void shell_sub_800538C4(uint32 source, uint32 destination);
+void shell_sub_800539F4(uint32 parameters, uint32 first, uint32 second);
+void shell_sub_80063CF4(const uint32 *first, const uint32 *second, sint32 duration, uint32 *output);
+uint32 shell_sub_80053C8C(uint32 model, uint32 flags);
+uint32 shell_sub_8005A430(uint32 screen);
+uint32 shell_sub_8005F258(uint32 button);
+void shell_sub_80059030(uint32 screen, uint32 result);
+void shell_sub_8004DE14(void);
+uint32 shell_sub_8003CA30(uint32 animation);
+void shell_sub_80062108(uint32 mode);
+void shell_sub_80058F8C(uint32 screen);
+void shell_sub_8004E16C(uint32 data);
+uint32 shell_sub_8004B894(uint32 screen);
+uint32 shell_sub_8004C328(uint32 screen);
+uint32 shell_sub_8004BAF0(uint32 screen);
+uint32 shell_sub_80053358(uint32 model);
+void shell_sub_8003EF24(uint32 screen);
+void shell_sub_8003F068(uint32 screen);
+void shell_sub_8003F014(uint32 screen);
+void shell_sub_8003F6EC(uint32 screen, uint32 result);
+void shell_sub_8003FA7C(uint32 screen);
+uint32 shell_sub_8003FAA0(uint32 screen);
+void shell_sub_8004CDEC(uint32 group);
+void shell_sub_80060D1C(void);
+uint32 shell_sub_80063070(uint32 bank);
+void shell_sub_800630CC(void);
+void shell_sub_80063124(void);
+uint32 shell_sub_8005F5E4(uint32 resource);
+uint32 shell_sub_800492D0(void);
+uint32 shell_sub_80049324(uint32 screen);
+void shell_sub_800453F8(void);
+void shell_sub_80045430(void);
+void shell_sub_8005FB50(uint32 clear);
+uint32 shell_sub_80045234(void);
+uint32 moh_native_draw_sync(uint32 mode);
+uint32 moh_native_put_draw_env(uint32 guest_env);
+uint32 moh_native_put_disp_env(uint32 guest_env);
+uint32 moh_native_draw_otag(uint32 guest_ot);
 
 void shell_sub_8004D508(uint32 widget);
 
@@ -168,4 +213,23 @@ uint32 shell_sub_8003C4AC(uint32 animation);
 void shell_sub_80063A3C(uint32 parameters);
 void shell_sub_80063AA8(uint32 parameters);
 
+uint32 moh_native_screen_initialized(uint32 screen);
+uint32 shell_sub_8003BE8C(uint32 animation);
+uint32 shell_sub_8003C028(uint32 frame);
+void shell_sub_8007699C(void);
+void shell_sub_80078048(void);
+void shell_sub_80078F4C(void);
+uint32 shell_sub_80079EF8(void);
+uint32 moh_native_cd_read_callback(uint32 callback);
+uint32 moh_native_draw_sync_callback(uint32 callback);
+void moh_native_note_screen_initialized(uint32 screen);
+void moh_native_forget_screen(uint32 screen);
+void shell_sub_80058FB0(uint32 screen);
+void shell_sub_8003F038(uint32 screen);
+uint32 shell_sub_800496A0(uint32 group);
+uint32 shell_sub_800498E8(uint32 item);
+uint32 shell_sub_80049A6C(uint32 node);
+uint32 shell_sub_80049B54(uint32 node);
+uint32 shell_sub_80049DA8(uint32 node);
+uint32 shell_sub_80049C60(uint32 node);
 #endif
