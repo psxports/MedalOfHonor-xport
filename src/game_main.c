@@ -1,3 +1,6 @@
+#include "psx.h"
+#include "psx_gpu.h"
+#include "game_draft_signatures.h"
 #include "xport.h"
 #include "xport_trace.h"
 
@@ -11,12 +14,7 @@ uint32 moh_guest_fp;
 uint32 moh_guest_gp;
 uint32 moh_guest_ra;
 
-void sub_80036B20(uint32 start, uint32 size);
-#if defined(_MSC_VER)
-__declspec(noreturn) void sub_80037060(void);
-#else
-_Noreturn void sub_80037060(void);
-#endif
+uint32 sub_80036B20(uint32 start, uint32 size);
 
 void sub_8001DFD4(void)
 {
@@ -48,10 +46,21 @@ void sub_8001DFD4(void)
     moh_guest_ra = r_u32(0x800CA2A0u);
     moh_guest_ra = 0x8001E078u;
     sub_80037060();
+    /* Preserve the original break if main unexpectedly returns */
+    moh_draft_fail_fast("Original startup break 0,1", 0x8001E078u);
+}
+
+uint32 moh_startup_initializers(void)
+{
+    /* The original constructor count is a literal zero */
+    if (!r_u32(0x8002F278u)) w_u32(0x8002F278u, 1u);
+    return 0u;
 }
 
 void xport_main(void)
 {
+    /* Keep every framebuffer update for this game */
+    gpu_set_frame_skip(0);
     /* BIOS Exec JALR link verified against the pinned cold-boot snapshot */
     moh_load_executable();
     moh_guest_ra = 0xBFC03D60u;

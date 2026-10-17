@@ -682,6 +682,20 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
         case 0x8004E354u:
             for (i = 0u; i < 2u; ++i) a[i] = va_arg(arguments, uint32);
             return level_sub_8004E354(a[0], a[1]);
+        case 0x8005C210u:
+        case 0x80059E40u:
+            for (i = 0u; i < 3u; ++i) a[i] = va_arg(arguments, uint32);
+            if (address == 0x80059E40u) return level_sub_80059E40(a[0], a[1], a[2]);
+            return level_sub_8005C210(a[0], a[1], a[2]);
+        case 0x8005CB00u:
+            for (i = 0u; i < 3u; ++i) a[i] = va_arg(arguments, uint32);
+            level_sub_8005CB00(a[0], a[1], a[2]); return 0u;
+        case 0x8005B23Cu:
+            for (i = 0u; i < 3u; ++i) a[i] = va_arg(arguments, uint32);
+            return level_sub_8005B23C(a[0], a[1], a[2]);
+        case 0x80040F48u:
+            for (i = 0u; i < 5u; ++i) a[i] = va_arg(arguments, uint32);
+            return level_sub_80040F48(a[0], a[1], a[2], a[3], a[4]);
         case 0x8004E01Cu:
             for (i = 0u; i < 3u; ++i) a[i] = va_arg(arguments, uint32);
             level_sub_8004E01C(a[0], a[1], a[2]); return 0u;
@@ -1730,17 +1744,14 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
     case 0x800492D0u:
         return shell_sub_800492D0();
     case 0x8001AB5Cu:
-        return (uint32)StopRCnt(va_arg(arguments, uint32), 0x8002E128u, 0x8002E130u);
+        return sub_8001AB5C(va_arg(arguments, uint32));
     case 0x8001AB2Cu:
         psx_root_counter_bind(0x8002E128u, 0x8002E130u);
         return (uint32)StartRCnt(va_arg(arguments, uint32));
     case 0x80019640u:
         return moh_native_cd_read_callback(va_arg(arguments, uint32));
     case 0x8001D140u:
-        a[0] = va_arg(arguments, uint32);
-        a[1] = r_u32(0x800D0A80u);
-        w_u32(0x800D0A80u, a[0]);
-        return a[1];
+        return sub_8001D140(va_arg(arguments, uint32));
     case 0x8001C9A8u:
         return (uint32)rsin((sint32)va_arg(arguments, uint32));
     case 0x8001BC68u: return sub_8001BC68(va_arg(arguments, uint32));
@@ -1765,13 +1776,13 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
             (MATRIX *)moh_draft_guest_pointer(a[1], 18u)); return a[1];
     case 0x80013AE4u:
         for (i = 0u; i < 4u; ++i) a[i] = va_arg(arguments, uint32);
-        sub_80013AE4(a[0], a[1], a[2], a[3]); return 0u;
+        moh_native_model_transform(a[0], a[1], a[2], a[3]); return 0u;
     case 0x80013E58u:
         a[0] = va_arg(arguments, uint32); a[1] = va_arg(arguments, uint32);
         return sub_80013E58(a[0], a[1]);
     case 0x80013F98u:
         for (i = 0u; i < 3u; ++i) a[i] = va_arg(arguments, uint32);
-        sub_80013F98(a[0], a[1], a[2]); return 0u;
+        return sub_80013F98(a[0], a[1], a[2]);
     case 0x8001536Cu:
         a[0] = va_arg(arguments, uint32); a[1] = va_arg(arguments, uint32);
         return (uint32)ratan2((sint32)a[0], (sint32)a[1]);
@@ -1787,7 +1798,7 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
         /* Native overlay teardown clears callbacks while retaining the frame clock */
         return ResetCallbackPSX();
     case 0x80016D40u:
-        return moh_native_draw_sync_callback(va_arg(arguments, uint32));
+        return sub_80016D40(va_arg(arguments, uint32));
     case 0x800158ACu:
         a[0] = va_arg(arguments, uint32);
         a[1] = va_arg(arguments, uint32);
@@ -1826,7 +1837,31 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
     case 0x800204C8u:
         SsEnd(); return 0u;
     case 0x8001D160u:
-        SpuQuit(); return 0u;
+        moh_native_spu_quit(); return 0u;
+    case 0x800269C8u:
+        moh_native_spu_quit(); return 0u;
+    case 0x8001CFB4u:
+        return sub_8001CFB4();
+    case 0x80016D30u:
+        return sub_80016D30();
+    case 0x80022E54u:
+        return sub_80022E54();
+    case 0x8002666Cu:
+        return sub_8002666C(va_arg(arguments, uint32));
+    case 0x8001DFB0u:
+        sub_8001DFB0(va_arg(arguments, uint32)); return 0u;
+    case 0x8001C714u:
+        sub_8001C714(va_arg(arguments, uint32)); return 0u;
+    case 0x8002669Cu:
+        sub_8002669C(va_arg(arguments, uint32)); return 0u;
+    case 0x800266ACu:
+        sub_800266AC(va_arg(arguments, uint32)); return 0u;
+    case 0x80016A70u:
+        for (i = 0u; i < 4u; ++i) a[i] = va_arg(arguments, uint32);
+        return sub_80016A70(a[0], a[1], a[2], a[3]);
+    case 0x8001716Cu:
+        for (i = 0u; i < 3u; ++i) a[i] = va_arg(arguments, uint32);
+        return sub_8001716C(a[0], a[1], a[2]);
     case 0x80049324u:
         return shell_sub_80049324(va_arg(arguments, uint32));
     case 0x800453F8u:
@@ -2081,7 +2116,7 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
         xport_bind_native_spu_transfer();
         return 0u;
     case 0x8001AF68u:
-        return moh_draft_missing_call(0x80021B80u, 1u);
+        return sub_8001AF68();
     case 0x80015B68u:
         a[0] = va_arg(arguments, uint32); a[1] = va_arg(arguments, uint32);
         level_native_master_volume(a[0], a[1]); return 0u;
@@ -2388,9 +2423,7 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
         moh_native_irq_install(va_arg(arguments, uint32));
         return 0u;
     case 0x8001E07Cu:
-        /* The original constructor count is zero */
-        if (!r_u32(0x8002F278u)) w_u32(0x8002F278u, 1u);
-        return 0u;
+        return moh_startup_initializers();
     case 0x80015B28u:
     {
         uint32 format_address = va_arg(arguments, uint32);
@@ -2460,12 +2493,12 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
         return 0u;
     case 0x8001582Cu:
     {
-        return (uint32)sub_8001582C();
+        return (uint32)moh_native_sound_init();
     }
     case 0x80016B60u:
     {
         a[0] = va_arg(arguments, uint32);
-        return (uint32)sub_80016B60(a[0]);
+        return (uint32)moh_native_reset_graph(a[0]);
     }
     case 0x80016CD4u:
     {
@@ -2525,8 +2558,8 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
         for (i = 0u; i < 4u; ++i) a[i] = va_arg(arguments, uint32);
         return sub_80010000(a[0], a[1], a[2], a[3]);
     case 0x80010A7Cu:
-        a[0] = va_arg(arguments, uint32); a[1] = va_arg(arguments, uint32);
-        return sub_80010A7C(a[0], a[1]);
+        for (i = 0; i < 5; ++i) a[i] = va_arg(arguments, uint32);
+        return sub_80010A7C(a[0], a[1], a[2], a[3], a[4]);
     case 0x80011214u:
         a[0] = va_arg(arguments, uint32); a[1] = va_arg(arguments, uint32);
         return sub_80011214(a[0], a[1]);
@@ -2569,7 +2602,8 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
     {
         a[0] = va_arg(arguments, uint32);
         a[1] = va_arg(arguments, uint32);
-        return (uint32)sub_80017234(a[0], a[1]);
+        a[2] = va_arg(arguments, uint32);
+        return (uint32)sub_80017234(a[0], a[1], a[2]);
     }
     case 0x800172E0u:
     {
@@ -2714,7 +2748,7 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
     }
     case 0x8001AD98u:
     {
-        return (uint32)sub_8001AD98();
+        return (uint32)moh_native_cd_reset();
     }
     case 0x8001ADD8u:
     {
@@ -2734,7 +2768,8 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
     case 0x8001B3E0u:
     {
         a[0] = va_arg(arguments, uint32);
-        return (uint32)sub_8001B3E0(a[0]);
+        a[1] = va_arg(arguments, uint32);
+        return (uint32)sub_8001B3E0(a[0], a[1]);
     }
     case 0x8001B730u:
     {
@@ -2941,12 +2976,13 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
     }
     case 0x80022D34u:
     {
-        return (uint32)sub_80022D34();
+        return (uint32)moh_native_cd_stop();
     }
     case 0x80022D74u:
     {
         a[0] = va_arg(arguments, uint32);
-        return (uint32)sub_80022D74(a[0]);
+        a[1] = va_arg(arguments, uint32);
+        return (uint32)sub_80022D74(a[0], a[1]);
     }
     case 0x80022DF0u:
     {
@@ -2988,7 +3024,8 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
     case 0x80022E64u:
     {
         a[0] = va_arg(arguments, uint32);
-        return (uint32)sub_80022E64(a[0]);
+        a[1] = va_arg(arguments, uint32);
+        return (uint32)sub_80022E64(a[0], a[1]);
     }
     case 0x80022EA4u:
     {
@@ -3143,7 +3180,7 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
     case 0x800266BCu:
     {
         a[0] = va_arg(arguments, uint32);
-        return (uint32)sub_800266BC(a[0]);
+        return (uint32)sub_800266BC(a[0], sub_8001CC9C);
     }
     case 0x80026AB8u:
     {
@@ -3271,7 +3308,7 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
         a[0] = va_arg(arguments, uint32);
         a[1] = va_arg(arguments, uint32);
         a[2] = va_arg(arguments, uint32);
-        return (uint32)sub_800363FC(a[0], a[1], a[2]);
+        return (uint32)moh_native_load_file(a[0], a[1], a[2]);
     }
     case 0x800369ECu:
     {
@@ -3285,15 +3322,13 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
     }
     case 0x80036AF8u:
     {
-        sub_80036AF8();
-        return 0u;
+        return sub_80036AF8();
     }
     case 0x80036B20u:
     {
         a[0] = va_arg(arguments, uint32);
         a[1] = va_arg(arguments, uint32);
-        sub_80036B20(a[0], a[1]);
-        return 0u;
+        return sub_80036B20(a[0], a[1]);
     }
     case 0x80036BF0u:
     {
@@ -3328,7 +3363,7 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
     {
         a[0] = va_arg(arguments, uint32);
         a[1] = va_arg(arguments, uint32);
-        return (uint32)sub_80037318(a[0], a[1]);
+        return (uint32)moh_native_load_overlay(a[0], a[1]);
     }
     case 0x80037370u:
     {
@@ -3369,6 +3404,206 @@ static uint32 moh_dispatch(uint32 address, va_list arguments)
         a[2] = va_arg(arguments, uint32);
         return (uint32)sub_80037C70(a[0], a[1], a[2]);
     }
+    case 0x8001874C:
+        sub_8001874C(); return 0;
+    case 0x8002B758:
+        sub_8002B758(); return 0;
+    case 0x80024880:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        a[3] = va_arg(arguments, uint32);
+        sub_80024880(a[0], a[1], a[2], a[3]); return 0;
+    case 0x80025150:
+        a[0] = va_arg(arguments, uint32);
+        return sub_80025150(a[0]);
+    case 0x800251C4:
+        a[0] = va_arg(arguments, uint32);
+        return sub_800251C4(a[0]);
+    case 0x80028B90:
+        a[0] = va_arg(arguments, uint32);
+        return sub_80028B90(a[0]);
+    case 0x80017F54:
+        return sub_80017F54();
+    case 0x80019654:
+        return sub_80019654();
+    case 0x80020CE8:
+        return sub_80020CE8();
+    case 0x80022530:
+        return sub_80022530();
+    case 0x80022B7C:
+        return sub_80022B7C();
+    case 0x80025164:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_80025164(a[0], a[1]);
+    case 0x80025184:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_80025184(a[0], a[1]);
+    case 0x800251A4:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_800251A4(a[0], a[1]);
+    case 0x8001880C:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        return sub_8001880C(a[0], a[1], a[2]);
+    case 0x80028B60:
+        a[0] = va_arg(arguments, uint32);
+        return sub_80028B60(a[0]);
+    case 0x800191D0:
+        return sub_800191D0();
+    case 0x800218B0:
+        return sub_800218B0();
+    case 0x80024858:
+        return sub_80024858();
+    case 0x8002BA68:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_8002BA68(a[0], a[1]);
+    case 0x8001AB90:
+        a[0] = va_arg(arguments, uint32);
+        return sub_8001AB90(a[0]);
+    case 0x80024B84:
+        a[0] = va_arg(arguments, uint32);
+        return sub_80024B84(a[0]);
+    case 0x80018754:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_80018754(a[0], a[1]);
+    case 0x800201A4:
+        return sub_800201A4();
+    case 0x80020158:
+        return sub_80020158();
+    case 0x800135F8:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_800135F8(a[0], a[1]);
+    case 0x8001D054:
+        return sub_8001D054();
+    case 0x80024890:
+        a[0] = va_arg(arguments, uint32);
+        return sub_80024890(a[0]);
+    case 0x8002334C:
+        return sub_8002334C();
+    case 0x8001AA90:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        return sub_8001AA90(a[0], a[1], a[2]);
+    case 0x80024C90:
+        a[0] = va_arg(arguments, uint32);
+        return sub_80024C90(a[0]);
+    case 0x80024BBC:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_80024BBC(a[0], a[1]);
+    case 0x8002BFC8:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_8002BFC8(a[0], a[1]);
+    case 0x800145DC:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        return sub_800145DC(a[0], a[1], a[2]);
+    case 0x8001449C:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_8001449C(a[0], a[1]);
+    case 0x80023950:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_80023950(a[0], a[1]);
+    case 0x8001B2E0:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        a[3] = va_arg(arguments, uint32);
+        return sub_8001B2E0(a[0], a[1], a[2], a[3]);
+    case 0x8001B5C0:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        return sub_8001B5C0(a[0], a[1], a[2]);
+    case 0x8001B890:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        a[3] = va_arg(arguments, uint32);
+        return sub_8001B890(a[0], a[1], a[2], a[3]);
+    case 0x8001B5B8:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_8001B5B8(a[0], a[1]);
+    case 0x8001B888:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        return sub_8001B888(a[0], a[1], a[2]);
+    case 0x80017900:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_80017900(a[0], a[1]);
+    case 0x800184B8:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_800184B8(a[0], a[1]);
+    case 0x80024914:
+        a[0] = va_arg(arguments, uint32);
+        return sub_80024914(a[0]);
+    case 0x80024D38:
+        a[0] = va_arg(arguments, uint32);
+        return sub_80024D38(a[0]);
+    case 0x8001F7AC:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        return sub_8001F7AC(a[0], a[1], a[2]);
+    case 0x8001F79C:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_8001F79C(a[0], a[1]);
+    case 0x80014128:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        a[3] = va_arg(arguments, uint32);
+        return sub_80014128(a[0], a[1], a[2], a[3]);
+    case 0x800125C4:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        a[3] = va_arg(arguments, uint32);
+        a[4] = va_arg(arguments, uint32);
+        a[5] = va_arg(arguments, uint32);
+        return sub_800125C4(a[0], a[1], a[2], a[3], a[4], a[5]);
+    case 0x80012D5C:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        return sub_80012D5C(a[0], a[1], a[2]);
+    case 0x80011B48:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        a[3] = va_arg(arguments, uint32);
+        return sub_80011B48(a[0], a[1], a[2], a[3]);
+    case 0x80012FF8:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        a[2] = va_arg(arguments, uint32);
+        a[3] = va_arg(arguments, uint32);
+        sub_80012FF8(a[0], a[1], a[2], a[3]); return 0;
+    case 0x80013698:
+        a[0] = va_arg(arguments, uint32);
+        return sub_80013698(a[0]);
+    case 0x8002B068:
+        a[0] = va_arg(arguments, uint32);
+        a[1] = va_arg(arguments, uint32);
+        return sub_8002B068(a[0], a[1]);
     default:
         moh_runtime_error("Unimplemented native call", address);
         return 0u;

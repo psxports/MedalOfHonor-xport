@@ -36,7 +36,6 @@ void level_sub_80082E88(uint32 object)
 {
     FUNCTION_MARKER(0x80082E88u, "LEVEL.BIN");
     /* Original callback consists only of JR RA and its NOP delay slot */
-    (void)object;
 }
 
 void level_sub_8006B8F0(uint32 object)
@@ -217,7 +216,6 @@ void level_sub_80061D08(uint32 player, uint32 mode)
     uint32 state = r_u32(player + 0x388u), count;
     FUNCTION_MARKER(0x80061D08u, "LEVEL.BIN");
     /* The original helper does not read the forwarded mode */
-    (void)mode;
     level_sub_80061A2C(player, state);
     w_u32(0x8009A594u, 0u);
     w_u32(0x8009A590u, 0u);

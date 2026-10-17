@@ -1,3 +1,4 @@
+#include "psx.h"
 #include "game_shell_signatures.h"
 #include "xport_trace.h"
 

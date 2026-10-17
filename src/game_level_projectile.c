@@ -23,7 +23,6 @@ uint32 level_sub_80073960(uint32 object, uint32 group)
 {
     uint32 record, count, index, value, velocity, magnitude, limit, acceleration, x, y, z, vx, vy, vz, first, second, third;
     FUNCTION_MARKER(0x80073960u, "LEVEL.BIN");
-    (void)object;
     record = r_u32(group + 40u); count = r_u32(group + 4u); w_u32(group, 2u);
     if ((sint32)count <= 0) return 1u;
     index = 0u;

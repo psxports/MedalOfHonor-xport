@@ -1,3 +1,4 @@
+#include "psx.h"
 /* Unverified draft C; integration is deferred */
 #include "game_draft_signatures.h"
 #include "xport_trace.h"
@@ -181,7 +182,7 @@ uint32 sub_80017408(uint32 a1)
 uint32 sub_80023F04(uint32 a1)
 {
     FUNCTION_MARKER(0x80023F04u, "SLUS_009.74");
-    uint32 hardware = r_u32(0x800347ACu), channel, counter, count, i;
+    uint32 hardware = r_u32(0x800347ACu), channel, counter, count, i, callback;
     w_u16(hardware + 10u, 64u); w_u16(hardware + 10u, 0u); w_u16(hardware + 8u, 13u); w_u16(hardware + 14u, 136u);
     sub_800251D8(r_u8(a1 + 232u) == 8u ? 80u : 145u);
     channel = r_u32(0x80034774u); hardware = r_u32(0x800347ACu);
@@ -196,8 +197,9 @@ uint32 sub_80023F04(uint32 a1)
      }
      counter = 0x8003478Cu + 4u * r_u32(0x80034774u);
      if (!r_u32(counter)) {
+      callback = r_u32(0x80034754u);
       w_u32(counter, 0xFFFFFFFFu);
-      moh_draft_indirect_call(r_u32(0x80034754u), a1);
+      moh_draft_indirect_call(callback, a1);
       moh_draft_indirect_call(r_u32(0x80034758u), a1);
      }
     }
@@ -211,12 +213,14 @@ uint32 sub_80023F04(uint32 a1)
     w_u8(r_u32(0x800347ACu), 1u); sub_800251D8(2000u);
     if (!sub_800247C8()) return 0u;
     /* TODO Callee outside selected set */
-    moh_draft_missing_call(0x80024858u); sub_800251D8(430u);
+    moh_draft_missing_call(0x80024858u);
+    r_u8(r_u32(0x800347ACu)); sub_800251D8(430u);
     for (i = 0u; i < 2u; ++i) {
      while (!(r_u32(r_u32(0x800347A8u)) & 128u)) if (sub_800251F8()) return 0u;
      w_u8(r_u32(0x800347ACu), i ? 1u : 66u); sub_800251D8(60u);
      if (!sub_800247C8()) return 0u;
      moh_draft_missing_call(0x80024858u);
+     r_u8(r_u32(0x800347ACu));
      if (!i) sub_800251D8(430u);
     }
     return 0u;
@@ -227,7 +231,7 @@ uint32 sub_80023F04(uint32 a1)
 sint32 sub_80018830(uint32 callback, uint32 data, uint32 size, uint32 argument)
 {
     FUNCTION_MARKER(0x80018830u, "SLUS_009.74");
-    uint32 entry, i, saved_mask;
+    uint32 entry, i, saved_mask, head, value, status_port;
     sub_80018FB8();
     while (((r_u32(0x8002E040u) + 1u) & 63u) == r_u32(0x8002E044u)) {
      if (sub_80018FEC()) return -1;
@@ -238,18 +242,23 @@ sint32 sub_80018830(uint32 callback, uint32 data, uint32 size, uint32 argument)
      (r_u32(r_u32(0x8002E02Cu)) & 0x01000000u) || r_u32(0x8002DF24u))) {
      sub_8001CAD8(2u, 0x80018AE0u);
      if (size) {
-      for (i = 0u; (sint32)i < (sint32)size / 4; ++i)
-       w_u32(0x800CA310u + 96u * r_u32(0x8002E040u) + 4u * i, r_u32(data + 4u * i));
+      for (i = 0u; (sint32)i < (sint32)size / 4; ++i) {
+       value = r_u32(data + 4u * i);
+       head = r_u32(0x8002E040u);
+       w_u32(0x800CA310u + 96u * head + 4u * i, value);
+      }
+      head = r_u32(0x8002E040u);
       entry = 0x800CA310u + 96u * r_u32(0x8002E040u);
-     } else entry = data;
-     w_u32(0x800CA308u + 96u * r_u32(0x8002E040u), entry);
+     } else { entry = data; head = r_u32(0x8002E040u); }
+     w_u32(0x800CA308u + 96u * head, entry);
      w_u32(0x800CA30Cu + 96u * r_u32(0x8002E040u), argument);
      w_u32(0x800CA304u + 96u * r_u32(0x8002E040u), callback);
      w_u32(0x8002E040u, (r_u32(0x8002E040u) + 1u) & 63u);
      sub_8001CBAC(r_u32(0x8002E048u)); sub_80018AE0();
      return (r_u32(0x8002E040u) - r_u32(0x8002E044u)) & 63u;
     }
-    while (!(r_u32(r_u32(0x8002E020u)) & 0x04000000u)) {}
+    status_port = r_u32(0x8002E020u);
+    while (!(r_u32(status_port) & 0x04000000u)) {}
     /* TODO Resolve queued callback adapter */
     moh_draft_indirect_call(callback, data, argument);
     sub_8001CBAC(r_u32(0x8002E048u)); return 0;
@@ -258,17 +267,20 @@ sint32 sub_80018830(uint32 callback, uint32 data, uint32 size, uint32 argument)
 uint32 sub_80020F48(uint32 a1)
 {
     FUNCTION_MARKER(0x80020F48u, "SLUS_009.74");
-    uint32 hardware = r_u32(0x800302BCu), polls, i;
-    w_u32(r_u32(0x800302CCu), r_u32(r_u32(0x800302CCu)) | 0xB0000u);
+    uint32 hardware, polls, i, dma = r_u32(0x800302CCu), status;
+    w_u32(dma, r_u32(dma) | 0xB0000u);
+    hardware = r_u32(0x800302BCu);
     w_u32(0x800302D8u, 0u); w_u32(0x800302DCu, 0u); w_u16(0x800302D4u, 0u);
     w_u16(hardware + 384u, 0u); w_u16(hardware + 386u, 0u); w_u16(hardware + 426u, 0u); sub_800218D8();
     hardware = r_u32(0x800302BCu); w_u16(hardware + 384u, 0u); w_u16(hardware + 386u, 0u);
     polls = 0u;
-    while (r_u16(r_u32(0x800302BCu) + 430u) & 2047u) {
+    status = r_u16(hardware + 430u);
+    while (status & 2047u) {
      if (++polls >= 0xF01u) {
       /* TODO Missing timeout printf adapter */
-      moh_draft_missing_call(0x80015B28u, 0x80014D1Cu, 0x80014D2Cu); break;
+       moh_draft_missing_call(0x80015B28u, 0x80014D1Cu, 0x80014D2Cu); break;
      }
+     status = r_u16(r_u32(0x800302BCu) + 430u);
     }
     w_u32(0x800302E0u, 2u); w_u32(0x800302E4u, 3u); w_u32(0x800302E8u, 8u); w_u32(0x800302ECu, 7u);
     hardware = r_u32(0x800302BCu);
@@ -277,8 +289,8 @@ uint32 sub_80020F48(uint32 a1)
     w_u16(hardware + 408u, 0u); w_u16(hardware + 410u, 0u);
     for (i = 0u; i < 10u; ++i) w_u16(0x800D0134u + 2u * i, 0u);
     if (!a1) {
-     w_u16(0x800302D4u, 512u);
      hardware = r_u32(0x800302BCu);
+     w_u16(0x800302D4u, 512u);
      w_u16(hardware + 400u, 0u); w_u16(hardware + 402u, 0u); w_u16(hardware + 404u, 0u); w_u16(hardware + 406u, 0u);
      w_u16(hardware + 432u, 0u); w_u16(hardware + 434u, 0u); w_u16(hardware + 436u, 0u); w_u16(hardware + 438u, 0u);
      sub_800211C8(0x800302FCu, 16u);
@@ -292,7 +304,8 @@ uint32 sub_80020F48(uint32 a1)
      hardware = r_u32(0x800302BCu); w_u16(hardware + 396u, 65535u); w_u16(hardware + 398u, 255u);
      sub_800218D8(); sub_800218D8(); sub_800218D8(); sub_800218D8();
     }
-    w_u32(0x800302F0u, 1u); w_u16(r_u32(0x800302BCu) + 426u, 0xC000u);
+    hardware = r_u32(0x800302BCu);
+    w_u32(0x800302F0u, 1u); w_u16(hardware + 426u, 0xC000u);
     w_u32(0x800302F4u, 0u); w_u32(0x800302F8u, 0u);
     return 0u;
 }
@@ -316,7 +329,8 @@ uint32 sub_80017AF8(uint32 a1, uint32 a2)
      extent = ((uint32)width & 65535u) | ((uint32)height << 16);
      color = ((uint32)r_u8(a2 + 27u) << 16) | ((uint32)r_u8(a2 + 26u) << 8) | r_u8(a2 + 25u);
      if ((xy & 63u) || (extent & 63u)) {
-      xy = ((r_u16(a2) - r_u16(a2 + 8u)) & 65535u) | ((r_u16(a2 + 2u) - r_u16(a2 + 10u)) << 16);
+      xy = (((xy & 65535u) - (uint32)r_u16(a2 + 8u)) & 65535u)
+         | (((xy >> 16) - (uint32)r_u16(a2 + 10u)) << 16);
       color |= 0x60000000u;
      } else color |= 0x02000000u;
      words = 10u;
@@ -357,28 +371,38 @@ uint32 sub_8001827C(uint32 a1, uint32 a2)
 uint32 sub_80024328(uint32 a1, uint32 a2)
 {
     FUNCTION_MARKER(0x80024328u, "SLUS_009.74");
-    uint32 io, prior, threshold, buffer;
+    uint32 io, prior, threshold, buffer, output, timer, mode, serial_status, irq, index, count;
     if ((sint32)a2 < 0) {
-     io = r_u32(0x800347ACu); prior = r_u8(io);
-     w_u8(a1 + 68u, 255u); w_u8(a1 + 69u, 1u); w_u8(r_u32(a1 + 64u), ~a2);
-     while (!(r_u16(r_u32(0x800347ACu) + 4u) & 1u)) {}
-     /* TODO Timeout helper parameter retained from prior reads */
+     io = r_u32(0x800347ACu); output = r_u32(a1 + 64u); prior = r_u8(io);
+     w_u8(a1 + 68u, 255u); w_u8(a1 + 69u, 1u); w_u8(output, ~a2);
+     io = r_u32(0x800347ACu);
+     while (!(r_u16(io + 4u) & 1u)) {}
      while (!sub_800251F8()) {}
      w_u8(r_u32(0x800347ACu), ~a2); return prior;
     }
     threshold = 136u;
     if ((r_u8(r_u32(a1 + 60u)) >> 4) == 8u && r_u8(a1 + 68u) >= 9u) threshold = 34u;
-    w_u32(0x800D0A94u, 430u); w_u32(0x800D0A90u, r_u16(0x1F801120u)); w_u32(0x800D0A98u, r_u16(0x1F801124u));
-    while (!(r_u16(r_u32(0x800347ACu) + 4u) & 2u)) {}
-    io = r_u32(0x800347ACu); prior = r_u8(io); w_u16(io + 14u, threshold);
-    while (!(r_u32(r_u32(0x800347A8u)) & 128u)) if (sub_800251F8()) return 0xFFFFFFECu;
+    timer = r_u16(0x1F801120u);
+    io = r_u32(0x800347ACu);
+    mode = r_u16(0x1F801124u);
+    serial_status = r_u16(io + 4u);
+    w_u32(0x800D0A94u, 430u); w_u32(0x800D0A90u, timer); w_u32(0x800D0A98u, mode);
+    while (!(serial_status & 2u)) serial_status = r_u16(io + 4u);
+    io = r_u32(0x800347ACu); irq = r_u32(0x800347A8u);
+    prior = r_u8(io); w_u16(io + 14u, threshold);
+    serial_status = r_u32(irq);
+    while (!(serial_status & 128u)) {
+     if (sub_800251F8()) return 0xFFFFFFECu;
+     serial_status = r_u32(r_u32(0x800347A8u));
+    }
     w_u8(r_u32(0x800347ACu), a2);
     if (threshold == 34u) {
-     w_u32(r_u32(0x800347A8u), 0xFFFFFF7Fu);
-     io = r_u32(0x800347ACu); w_u16(io + 10u, r_u16(io + 10u) | 16u);
+     irq = r_u32(0x800347A8u); io = r_u32(0x800347ACu);
+     w_u32(irq, 0xFFFFFF7Fu);
+     w_u16(io + 10u, r_u16(io + 10u) | 16u);
     }
-    buffer = r_u32(a1 + 60u) + r_u8(a1 + 68u);
-    w_u8(a1 + 69u, r_u8(a1 + 69u) + 1u); w_u8(buffer, prior); w_u8(a1 + 68u, r_u8(a1 + 68u) + 1u);
+    count = r_u8(a1 + 69u); index = r_u8(a1 + 68u); buffer = r_u32(a1 + 60u) + index;
+    w_u8(a1 + 69u, count + 1u); w_u8(buffer, prior); w_u8(a1 + 68u, r_u8(a1 + 68u) + 1u);
     return prior;
 }
 
@@ -443,7 +467,7 @@ uint32 sub_800211C8(uint32 a1, uint32 a2)
 uint32 sub_80036C14(uint32 size, uint32 owner, uint32 flags)
 {
     FUNCTION_MARKER(0x80036C14u, "SLUS_009.74");
-    uint32 status_word, units, first, previous, node, count, tag, used, free_units, serial;
+    uint32 status_word, units, first, previous, node, count, tag, used, free_units, serial, high_water;
     if (!size) return 0u;
     /* Preserve native interrupt state while updating the game heap */
     status_word = (uint32)xport_bios_enter_critical();
@@ -472,9 +496,10 @@ uint32 sub_80036C14(uint32 size, uint32 owner, uint32 flags)
     serial = r_u32(0x80039D70u); tag = flags | 0x80000000u | serial;
     free_units = r_u32(0x80039D88u) - units; used = r_u32(0x80039D78u) + units;
     w_u32(node + 12u, 0xB562439Fu - (units + owner + tag));
+    high_water = r_u32(0x80039D58u);
     w_u32(node, units); w_u32(node + 4u, owner); w_u32(node + 8u, tag);
     w_u32(0x80039D88u, free_units); w_u32(0x80039D78u, used);
-    if ((sint32)r_u32(0x80039D58u) < (sint32)used) w_u32(0x80039D58u, used);
+    if ((sint32)high_water < (sint32)used) w_u32(0x80039D58u, used);
     if ((sint32)free_units < (sint32)r_u32(0x80039D80u)) w_u32(0x80039D80u, free_units);
     w_u32(0x80039D70u, serial + 0x10000u);
     if (status_word) xport_bios_exit_critical();
@@ -518,8 +543,12 @@ uint32 sub_80037C70(uint32 a1, uint32 a2, uint32 a3)
     w_u8(destination, 0u);
     pair = r_u32(0x80039D3Cu); slot = r_u32(0x80039D40u);
     w_u32(pair, r_u32(a2)); w_u32(pair + 4u, r_u32(a2 + 4u)); w_u32(slot, a3);
-    next = r_u32(0x80039D34u) + 16u; limit = r_u32(0x80039D38u);
-    w_u32(0x80039D3Cu, pair + 8u); w_u32(0x80039D34u, next); w_u32(0x80039D40u, slot + 4u);
+    next = r_u32(0x80039D34u) + 16u;
+    pair = r_u32(0x80039D3Cu) + 8u;
+    limit = r_u32(0x80039D38u);
+    w_u32(0x80039D3Cu, pair);
+    slot = r_u32(0x80039D40u) + 4u;
+    w_u32(0x80039D34u, next); w_u32(0x80039D40u, slot);
     if (limit < next) {
      w_u32(0x80039D34u, 0x80038E38u); w_u32(0x80039D3Cu, 0x80039638u); w_u32(0x80039D40u, 0x80039A38u);
      return 0x80039A38u;
@@ -599,7 +628,7 @@ uint32 sub_800252E0(uint32 a1)
     return sub_8002454C(a1, mode ? mode : 66u);
 }
 
-void sub_80036B20(uint32 start, uint32 size)
+uint32 sub_80036B20(uint32 start, uint32 size)
 {
     FUNCTION_MARKER(0x80036B20u, "SLUS_009.74");
     uint32 header, units, tail;
@@ -616,7 +645,7 @@ void sub_80036B20(uint32 start, uint32 size)
     w_u32(tail, 0u); w_u32(tail + 4u, header); w_u32(tail + 8u, 0u);
     w_u32(tail + 12u, 0xB562439Fu - header);
     w_u32(0x80039C48u, tail); w_u32(0x80039D70u, 0x10000u);
-    moh_draft_missing_call(0x80015B28u, 0x800360E0u);
+    return moh_draft_missing_call(0x80015B28u, 0x800360E0u);
 }
 
 uint32 sub_80017348(uint32 a1)
@@ -640,9 +669,11 @@ uint32 sub_800170AC(uint32 a1, uint32 a2, uint32 a3)
     uint32 table;
     sub_80016EA0(0x800148C0u, a1);
     if (!r_u16(a1 + 4u) || !r_u16(a1 + 6u)) return 0xFFFFFFFFu;
-    w_u32(0x8002DFBCu, (a3 << 16) | (a2 & 65535u));
-    w_u32(0x8002DFB8u, r_u32(a1)); w_u32(0x8002DFC0u, r_u32(a1 + 4u));
+    uint32 rectangle = r_u32(a1);
     table = r_u32(0x8002DF10u);
+    w_u32(0x8002DFBCu, (a3 << 16) | (a2 & 65535u));
+    w_u32(0x8002DFB8u, rectangle);
+    w_u32(0x8002DFC0u, r_u32(a1 + 4u));
     /* TODO Resolve GPU enqueue adapter */
     return moh_draft_indirect_call(r_u32(table + 8u), r_u32(table + 24u), 0x8002DFB0u, 20u, 0u);
 }
@@ -671,7 +702,7 @@ sint32 sub_80037370(uint32 sectors, uint32 sector, uint32 destination)
     moh_draft_missing_call(0x8001ADD8u, sector, moh_draft_local_address(location, sizeof(location)));
     do {
      while (!moh_draft_missing_call(0x80019220u, moh_draft_local_address(location, sizeof(location)), sectors, destination, 128u)) {
-      moh_draft_missing_call(0x8001AD98u); sub_80016E38(0u);
+      moh_draft_missing_call(0x8001AD98u); moh_native_draw_sync(0u);
       moh_draft_missing_call(0x80015DB8u, 0u); moh_draft_missing_call(0x80015DB8u, 0u); moh_draft_missing_call(0x80015DB8u, 0u);
      }
      do { result = (sint32)moh_draft_missing_call(0x800195D0u, moh_draft_local_address(result_buffer, sizeof(result_buffer))); } while (result > 0);
@@ -693,16 +724,16 @@ uint32 sub_80017D88(uint32 a1, uint32 a2)
 uint32 sub_8001B730(uint32 context, uint32 value, uint32 mode, uint32 entry_callback)
 {
     FUNCTION_MARKER(0x8001B730u, "SLUS_009.74");
-    uint32 object;
-    /* TODO Incoming v0 callback carrier is an explicit draft parameter */
+    uint32 object, advertised;
     object = moh_draft_indirect_call(entry_callback, context, value, mode);
     if (moh_draft_indirect_call(r_u32(0x80034750u), object)) return 0u;
     w_u8(object + 70u, 1u);
     w_u32(object + 20u, 0x8001B7C4u);
+    advertised = r_u8(object + 228u);
     w_u8(object + 81u, value);
     w_u8(object + 82u, mode);
     w_u32(object + 24u, 0x8001B81Cu);
-    w_u8(object + 83u, value == r_u8(object + 228u));
+    w_u8(object + 83u, value == advertised);
     return 1u;
 }
 
@@ -734,7 +765,7 @@ uint32 sub_800369EC(uint32 status)
     if ((status & 255u) == 2u) {
      result = moh_draft_missing_call(0x80019640u, r_u32(0x800385A0u));
      w_u32(0x80038598u, 0u);
-     return result;
+     return 0x80040000u;
     }
     result = moh_draft_missing_call(0x80019220u, 0x8003859Cu, r_u32(0x80038594u), r_u32(0x80038590u), 128u);
     if ((sint32)result <= 0) moh_draft_missing_call(0x80015B28u, 0x80035F04u);
@@ -748,8 +779,8 @@ uint32 sub_800216C4(uint32 a1, uint32 a2, uint32 a3)
     else {
      uint32 transfer = (uint32)r_u16(0x800302D4u) << (r_u32(0x800302E4u) & 31u);
      sub_80021444(2u, transfer, a3);
-     /* TODO Helper returns transfer state through argument registers */
-     sub_80021444(1u, moh_draft_missing_call(0x80021704u, 5u), moh_draft_missing_call(0x80021704u, 6u));
+     /* Mode 1 ignores both remaining arguments */
+     sub_80021444(1u, 0u, 0u);
      sub_80021444(3u, a1, a2);
     }
     return a2;
@@ -810,8 +841,16 @@ uint32 sub_800218D8(void)
 
 sint32 sub_80037318(uint32 filename, uint32 destination)
 {
+    uint32 size_storage, size_address;
+    sint32 result;
     FUNCTION_MARKER(0x80037318u, "SLUS_009.74");
-    return moh_native_load_overlay(filename, destination);
+    /* TODO Bind the addressable size output local */
+    size_address = moh_draft_local_address(&size_storage, sizeof(size_storage));
+    result = sub_800363FC(filename, size_address, destination) ? 0 : -1;
+    sub_8001AF88();
+    moh_draft_missing_call(0x8001E10Cu);
+    sub_8001AD38();
+    return result;
 }
 
 void sub_80023C60(uint32 a1, uint32 a2)
@@ -823,20 +862,20 @@ void sub_80023C60(uint32 a1, uint32 a2)
     for (i = 0u; i < 8u; ++i) w_u8(a1 + i, r_u8(a2 + i));
 }
 
-uint32 sub_80022E64(uint32 a1)
+uint32 sub_80022E64(uint32 command, uint32 parameters)
 {
     FUNCTION_MARKER(0x80022E64u, "SLUS_009.74");
     if ((sint32)r_u32(0x80034618u) > 0) return 0u;
     w_u32(0x800345F0u, 32u);
-    /* TODO Retained a1 carrier requires an ABI adapter */
-    return sub_80022EA4(a1 & 255u, moh_draft_missing_call(0x80022E8Cu));
+    return sub_80022EA4(command & 255u, parameters);
 }
 
-uint32 sub_800266BC(uint32 environment)
+uint32 sub_800266BC(uint32 environment, uint32 (*continuation)(void))
 {
     FUNCTION_MARKER(0x800266BCu, "SLUS_009.74");
-    /* TODO Native setjmp continuation adapter; do not synthesize guest register slots */
-    return moh_draft_missing_call(0x800266BCu, environment);
+    /* Reuse the audited native IRQ continuation instead of saving guest registers */
+    moh_native_irq_prepare(environment, continuation);
+    return 0u;
 }
 
 uint32 sub_80018FB8(void)
@@ -862,10 +901,12 @@ uint32 sub_8001CB3C(uint32 slot, uint32 callback)
     return moh_draft_indirect_call(r_u32(r_u32(0x8002F258u) + 20u), slot, callback);
 }
 
-void sub_80036AF8(void)
+uint32 sub_80036AF8(void)
 {
     FUNCTION_MARKER(0x80036AF8u, "SLUS_009.74");
-    sub_80036B20(r_u32(0x80039D50u), r_u32(0x80039D54u));
+    uint32 start = r_u32(0x80039D50u);
+    uint32 size = r_u32(0x80039D54u);
+    return sub_80036B20(start, size);
 }
 
 uint32 sub_80029420(uint32 a1)
@@ -890,7 +931,7 @@ uint32 sub_8002ACD0(uint32 callback)
 uint32 sub_8001D180(void)
 {
     FUNCTION_MARKER(0x8001D180u, "SLUS_009.74");
-    return sub_80022D34();
+    return moh_native_cd_stop();
 }
 
 uint32 sub_800203F8(void)

@@ -445,7 +445,6 @@ uint32 level_sub_8004532C(uint32 owner, uint32 resource, uint32 model, uint32 sp
     uint32 object, state, value, index, distance, axis, position[3], velocity[3];
     sint32 dx, dz, product;
     FUNCTION_MARKER(0x8004532Cu, "LEVEL.BIN");
-    (void)unused;
     object = moh_draft_missing_call(0x8006B5B8u, model != 0xFFFFFFFFu, state_size + 0x90u, model, model != 0xFFFFFFFFu ? 0x147u : 0u, 2u, 0u, 0u, 0u);
     if (!object) return 0u;
     w_u32(object + 0x36Cu, 0x80044470u); w_u32(object + 0x370u, 0x80044B0Cu);
@@ -1152,7 +1151,6 @@ uint32 level_sub_8005898C(uint32 object, uint32 data)
     uint32 context, base, target;
     sint32 depth;
     FUNCTION_MARKER(0x8005898Cu, "LEVEL.BIN");
-    (void)object;
     context = r_u32(0x80099EC4u); depth = (sint16)r_u16(context + 30u);
     if (depth) base = r_u32(context + ((uint32)depth - 1u) * 16u + 44u);
     else base = r_u32(r_u32(context + 16u) + 12u);
@@ -1201,7 +1199,6 @@ uint32 level_sub_80059C2C(uint32 object, uint32 data)
     uint32 context, base, target;
     sint32 depth;
     FUNCTION_MARKER(0x80059C2Cu, "LEVEL.BIN");
-    (void)object;
     context = r_u32(0x80099EC4u); depth = (sint16)r_u16(context + 30u);
     if (depth) base = r_u32(context + ((uint32)depth - 1u) * 16u + 44u);
     else base = r_u32(r_u32(context + 16u) + 12u);

@@ -1,3 +1,4 @@
+#include "psx.h"
 #include "game_draft_signatures.h"
 
 /* Unverified draft C, integration and adapters are deferred */
@@ -78,16 +79,28 @@ uint32 sub_8001CAD8(uint32 argument0, uint32 argument1)
 
 uint32 sub_8001AD98(void)
 {
-    return moh_native_cd_reset();
+    sub_80023B80();
+    moh_draft_missing_call(0x8001985Cu);
+    moh_draft_missing_call(0x80022600u);
+    return sub_80023BF8();
 }
 
-uint32 sub_80022D34(void)
+uint32 moh_native_cd_stop(void)
 {
     /* Synchronous native reads have no CD interrupt pipeline to stop */
     w_u32(0x800345D4u, 0u);
     w_u32(0x80035044u, 0u);
     w_u32(0x80035048u, 0u);
     return moh_native_cd_reset();
+}
+
+uint32 sub_80022D34(void)
+{
+    w_u32(0x800345D4u, 0u);
+    sub_80027A18();
+    w_u32(0x80035044u, 0u);
+    w_u32(0x80035048u, 0u);
+    return sub_8001CB3C(0u, 0u);
 }
 
 uint32 sub_80018794(uint32 a0)
@@ -109,15 +122,15 @@ uint32 sub_8001AEE8(uint32 a0)
         + 10u * (frame >> 4) + (frame & 15u) - 150u;
 }
 
-uint32 sub_8001F740(uint32 input_t0, uint32 input_v1, uint32 input_hi, uint32 input_a2)
+uint32 sub_8001F740(uint32 first_high_product, uint32 first_dividend, uint32 second_high_product, uint32 second_dividend)
 {
     /* TODO Callers must recover these nonstandard incoming carriers */
-    uint32 left = (uint32)((sint32)(input_t0 + input_v1) >> 6) - (uint32)((sint32)input_v1 >> 31);
-    uint32 right = (uint32)((sint32)(input_hi + input_a2) >> 6) - (uint32)((sint32)input_a2 >> 31);
+    uint32 left = (uint32)((sint32)(first_high_product + first_dividend) >> 6) - (uint32)((sint32)first_dividend >> 31);
+    uint32 right = (uint32)((sint32)(second_high_product + second_dividend) >> 6) - (uint32)((sint32)second_dividend >> 31);
     w_u32(0x800D1590u, 6u);
     w_u16(0x800D1598u, (uint16)left);
     w_u16(0x800D159Au, (uint16)right);
-    return moh_draft_missing_call(0x80028F40u, 0x800D1590u);
+    return moh_draft_missing_call(0x80028F40u, 0x800D1590u, second_high_product, (uint32)((sint32)second_dividend >> 31));
 }
 
 void sub_80020138(void) { sub_8001FF08(0u); }
@@ -128,7 +141,6 @@ void sub_8001F17C(void)
     if (r_u32(0x80035064u) == 1u)
     {
         sub_8001D0F0(0u);
-        /* TODO Wrapper forwards volatile arguments not present in its recovered API */
         sub_8001D1B0(0u);
     }
     else
@@ -259,7 +271,7 @@ uint32 sub_80022C54(void)
     sub_8001ADD8(0u, 0x80034602u);
     w_u8(0x80034606u, 0u);
     w_u8(0x80034607u, 0u);
-    w_u32(0x80034608u, 0u);
+    for (i = 0u; i < 4u; ++i) w_u8(0x80034608u + i, 0u);
     w_u32(0x8003460Cu, 0u);
     w_u32(0x80034610u, 1u);
     w_u32(0x80034614u, 0u);
@@ -302,8 +314,8 @@ uint32 sub_80023AD0(uint32 a0, uint32 a1)
     w_u8(0x8003460Bu, (uint8)((byte >> 1) & 1u));
     w_u8(0x800345ECu, (uint8)byte);
     sub_80023C60(0x800345E4u, a1);
-    /* TODO Recover the helper's incidental v0 result; its registry currently returns void */
-    return moh_draft_missing_call(0x80023B70u);
+    /* The copy loop returns zero; a null source leaves the status bit */
+    return a1 ? 0u : ((byte >> 5) & 1u);
 }
 
 uint32 sub_80023A3C(uint32 a0, uint32 a1)
@@ -326,13 +338,14 @@ uint32 sub_80023A3C(uint32 a0, uint32 a1)
 
 uint32 sub_800234E4(uint32 a0, uint32 a1)
 {
-    uint32 command = r_u8(0x800345D8u), result;
+    uint32 command = 0u, result, status;
     if ((a0 & 255u) != 2u)
     {
-        w_u32(0x800345F4u, (r_u8(0x800345ECu) & 16u) ? 2u : 1u);
-        w_u32(0x800345F8u, (r_u8(0x800345ECu) & 16u) ? 12u : 11u);
+        status = r_u8(0x800345ECu);
+        w_u32(0x800345F4u, (status & 16u) ? 2u : 1u);
+        w_u32(0x800345F8u, (status & 16u) ? 12u : 11u);
     }
-    else if (command == 14u)
+    else if ((command = r_u8(0x800345D8u)) == 14u)
     {
         if ((r_u8(0x80034601u) ^ r_u8(0x800345D9u)) & 128u)
         {
@@ -348,12 +361,17 @@ uint32 sub_800234E4(uint32 a0, uint32 a1)
     }
     else
     {
+        command = r_u8(0x800345D8u);
         if (command == 2u)
         {
-            uint32 i;
-            for (i = 0; i < 4u; ++i) w_u8(0x80034602u + i, r_u8(0x800345D9u + i));
+            uint32 bytes = r_u32(0x800345DCu) << 24;
+            bytes |= r_u32(0x800345D8u) >> 8;
+            w_masked_u32(0x80034604u, bytes >> 16, 3u);
+            w_masked_u32(0x80034600u, bytes << 16, 12u);
         }
-        if (command == 21u || command == 22u) w_u8(0x80034606u, (uint8)command);
+        if (command == 3u || command == 6u || command == 27u)
+            w_u8(0x80034607u, r_u8(0x800345D8u));
+        if (command == 21u || command == 22u) w_u8(0x80034606u, r_u8(0x800345D8u));
         w_u32(0x800345F4u, 1u); w_u32(0x800345F8u, 11u);
     }
     result = r_u32(0x800D0A74u);
@@ -432,12 +450,34 @@ uint32 sub_8002AD00(uint32 a0)
 
 uint32 sub_80016B60(uint32 mode)
 {
-    return moh_native_reset_graph(mode);
+    uint32 subtype = mode & 7u, graph_type, width, height;
+    if (subtype == 0u || subtype == 3u)
+        moh_draft_missing_call(0x80015B28u, 0x800147B4u, 0x8002DED0u, 0x8002DF18u);
+    if (subtype == 0u || subtype == 3u || subtype == 5u)
+    {
+        sub_800191F8(0x8002DF18u, 0u, 128u);
+        sub_8001CA78();
+        moh_draft_missing_call(0x80022550u, r_u32(0x8002DF10u) & 0xFFFFFFu);
+        w_u8(0x8002DF18u, sub_80018D40(mode));
+        graph_type = r_u8(0x8002DF18u);
+        w_u8(0x8002DF19u, 1u);
+        width = r_u16(0x8002DF98u + 4u * graph_type);
+        graph_type = r_u8(0x8002DF18u);
+        w_u16(0x8002DF1Cu, width);
+        height = r_u16(0x8002DFA4u + 4u * graph_type);
+        w_u16(0x8002DF1Eu, height);
+        sub_800191F8(0x8002DF28u, 0xFFFFFFFFu, 92u);
+        sub_800191F8(0x8002DF84u, 0xFFFFFFFFu, 20u);
+        return r_u8(0x8002DF18u);
+    }
+    if (r_u8(0x8002DF1Au) >= 2u)
+        moh_draft_indirect_call(r_u32(0x8002DF14u), 0x800147D4u, mode);
+    return moh_draft_indirect_call(r_u32(r_u32(0x8002DF10u) + 52u), 1u);
 }
 
 uint32 sub_80018AE0(void)
 {
-    uint32 tail, entry, argument0, argument1, target;
+    uint32 tail, entry, argument0, argument1, target, status_port, target_index;
     if (r_u32(r_u32(0x8002E02Cu)) & 0x01000000u) return 1u;
     w_u32(0x8002E04Cu, sub_8001CBAC(0u));
     while (r_u32(0x8002E040u) != r_u32(0x8002E044u)
@@ -446,11 +486,13 @@ uint32 sub_80018AE0(void)
         tail = r_u32(0x8002E044u);
         if (((tail + 1u) & 63u) == r_u32(0x8002E040u) && !r_u32(0x8002DF24u))
             sub_8001CAD8(2u, 0u);
-        while (!(r_u32(r_u32(0x8002E020u)) & 0x04000000u)) {}
+        status_port = r_u32(0x8002E020u);
+        while (!(r_u32(status_port) & 0x04000000u)) {}
+        target_index = r_u32(0x8002E044u);
         entry = 0x800CA304u + 96u * r_u32(0x8002E044u);
         argument0 = r_u32(entry + 4u);
         argument1 = r_u32(0x800CA30Cu + 96u * r_u32(0x8002E044u));
-        target = r_u32(0x800CA304u + 96u * r_u32(0x8002E044u));
+        target = r_u32(0x800CA304u + 96u * target_index);
         /* TODO Resolve the queue callback targets */
         moh_draft_indirect_call(target, argument0, argument1);
         w_u32(0x8002E044u, (r_u32(0x8002E044u) + 1u) & 63u);
@@ -561,6 +603,7 @@ uint32 sub_80036A70(uint32 status)
 uint32 sub_8002454C(uint32 a0, uint32 a1)
 {
     uint32 control = 136u, received, timer, elapsed, index, port;
+    uint32 status_port, timer_base, timer_limit;
     if ((r_u8(r_u32(a0 + 60u)) >> 4) == 8u && r_u8(a0 + 68u) >= 9u) control = 34u;
     port = r_u32(0x800347ACu);
     while (!(r_u16(port + 4u) & 2u)) {}
@@ -568,19 +611,25 @@ uint32 sub_8002454C(uint32 a0, uint32 a1)
     port = r_u32(0x800347ACu);
     received = r_u8(port);
     w_u16(port + 14u, (uint16)((!r_u8(a0 + 68u) && (received >> 4) == 8u) ? 34u : control));
-    while (!(r_u32(r_u32(0x800347A8u)) & 128u))
+    status_port = r_u32(0x800347A8u);
+    if (!(r_u32(status_port) & 128u))
     {
-        /* Preserve the timer-mode reads and the wrap-extension order */
-        r_u16(0x1F801124u);
-        timer = r_u16(0x1F801120u);
-        if ((sint32)timer < (sint32)r_u32(0x800D0A90u))
+        timer_base = r_u32(0x800D0A90u);
+        timer_limit = r_u32(0x800D0A94u);
+        do
         {
-            if (r_u16(0x1F801128u)) timer += r_u16(0x1F801128u);
-            else timer += 0x10000u;
-        }
-        elapsed = timer - r_u32(0x800D0A90u);
-        if (!(r_u16(0x1F801124u) & 512u)) elapsed = (uint32)((sint32)elapsed >> 3);
-        if ((sint32)elapsed >= (sint32)r_u32(0x800D0A94u)) return 0xFFFFFFFEu;
+            r_u16(0x1F801124u);
+            timer = r_u16(0x1F801120u);
+            if ((sint32)timer < (sint32)timer_base)
+            {
+                if (r_u16(0x1F801128u)) timer += r_u16(0x1F801128u);
+                else timer += 0x10000u;
+            }
+            index = r_u16(0x1F801124u);
+            elapsed = timer - timer_base;
+            if (!(index & 512u)) elapsed = (uint32)((sint32)elapsed >> 3);
+            if ((sint32)elapsed >= (sint32)timer_limit) return 0xFFFFFFFEu;
+        } while (!(r_u32(status_port) & 128u));
     }
     if (r_u8(a0 + 232u) != 8u && r_u32(0x80034778u) == 2u)
     {
@@ -594,8 +643,9 @@ uint32 sub_8002454C(uint32 a0, uint32 a1)
         w_u32(r_u32(0x800347A8u), 0xFFFFFF7Fu);
         w_u16(port + 10u, r_u16(port + 10u) | 16u);
     }
+    timer = r_u8(a0 + 69u);
     index = r_u8(a0 + 68u);
-    w_u8(a0 + 69u, (uint8)(r_u8(a0 + 69u) + 1u));
+    w_u8(a0 + 69u, (uint8)(timer + 1u));
     if (index != 255u) w_u8(r_u32(a0 + 60u) + r_u8(a0 + 68u), (uint8)received);
     w_u8(a0 + 68u, (uint8)(r_u8(a0 + 68u) + 1u));
     return received;
@@ -603,9 +653,10 @@ uint32 sub_8002454C(uint32 a0, uint32 a1)
 
 void sub_8001FF08(uint32 a0)
 {
-    uint32 mode = r_u32(0x8002FF5Cu), counter = 0xF2000002u, reload = 17640u, callback;
+    uint32 mode, counter = 0xF2000002u, reload = 17640u, callback, use_vblank;
     sint32 delay = 998;
     while (delay-- >= 0) {}
+    mode = r_u32(0x8002FF5Cu);
     w_u8(0x8002FF6Eu, 6u); w_u8(0x8002FF6Cu, 0u); w_u8(0x8002FF6Du, 0u);
     w_u32(0x8002FF68u, 0u);
     if (mode == 0u) { w_u8(0x8002FF6Eu, 127u); return; }
@@ -619,6 +670,8 @@ void sub_8001FF08(uint32 a0)
     else if (mode != 2u)
     {
         if (r_u32(0x8002FF60u)) return;
+        mode = r_u32(0x8002FF5Cu);
+        if (!mode) moh_draft_fail_fast("Original sequencer division by zero", 0x80020008u);
         /* The full MIPS divides by the requested frequency, unlike the truncated IDA formula */
         if ((sint32)mode < 70)
         {
@@ -627,8 +680,9 @@ void sub_8001FF08(uint32 a0)
         }
         else reload = (uint32)(4233600 / (sint32)mode);
     }
+    use_vblank = r_u8(0x8002FF6Cu);
     sub_8001AF88();
-    if (r_u8(0x8002FF6Cu)) sub_8001CB08(r_u32(0x8002FF64u));
+    if (use_vblank) sub_8001CB08(r_u32(0x8002FF64u));
     else
     {
         moh_draft_missing_call(0x8001AB90u, counter);
@@ -667,7 +721,91 @@ uint32 sub_800362E8(uint32 a0, uint32 a1, uint32 a2)
 
 uint32 sub_800363FC(uint32 filename, uint32 size_address, uint32 destination)
 {
-    return moh_native_load_file(filename, size_address, destination);
+    uint8 name_storage[128];
+    uint32 position_storage[2];
+    uint32 name, position, attempts = 1u, result, file_size = 0u, allocation = 0u;
+    uint32 first_sector, sectors, copied;
+    /* TODO Bind native addressable locals for filename conversion and directory lookup */
+    name = moh_draft_local_address(name_storage, sizeof(name_storage));
+    position = moh_draft_local_address(position_storage, sizeof(position_storage));
+    sub_800362E8(name, filename, 0u);
+    for (;;)
+    {
+        result = sub_800374EC(position, name);
+        if (result + 1u >= 2u) break;
+        moh_draft_missing_call(0x80015B28u, 0x80035D70u, name, attempts);
+        moh_draft_missing_call(0x80015B28u, 0x80035D98u, result);
+        moh_native_cd_reset();
+        moh_native_draw_sync(0u);
+        moh_draft_missing_call(0x80015DB8u, 0u);
+        moh_draft_missing_call(0x80015DB8u, 0u);
+        moh_draft_missing_call(0x80015DB8u, 0u);
+        if (attempts++ < 32u) continue;
+        moh_draft_missing_call(0x80015B28u, 0x80035DA4u, name, attempts);
+        goto finish;
+    }
+    sub_8001ADD8(r_u32(position), 0x8003859Cu);
+    file_size = r_u32(position + 4u);
+    allocation = destination ? destination : sub_80036BF0(file_size + 1u);
+    if (!allocation) goto finish;
+    first_sector = r_u32(position);
+    w_u32(0x80038590u, allocation);
+    /* The original alternate buffered branch is unreachable with its zero-initialized carried count */
+    w_u32(0x80038594u, (uint32)((sint32)file_size >> 11));
+    if (r_u32(0x80038594u))
+    {
+        w_u32(0x80038598u, 1u);
+        w_u32(0x800385A0u, moh_draft_missing_call(0x80019640u, 0x800369ECu));
+        while ((sint32)moh_draft_missing_call(0x80019220u, 0x8003859Cu,
+            r_u32(0x80038594u), r_u32(0x80038590u), 128u) <= 0)
+        {
+            moh_native_cd_reset();
+            moh_draft_missing_call(0x80015DB8u, 0u);
+            moh_draft_missing_call(0x80015DB8u, 0u);
+            moh_draft_missing_call(0x80019640u, 0x800369ECu);
+            moh_draft_missing_call(0x80015B28u, 0x80035DCCu);
+        }
+        while (r_u32(0x80038598u)) {}
+        sectors = r_u32(0x80038594u);
+        copied = sectors << 11;
+        sub_8001ADD8(first_sector + r_u32(0x80038594u), 0x8003859Cu);
+        if (file_size != copied)
+        {
+            w_u32(0x80038598u, 1u);
+            w_u32(0x800385A0u, moh_draft_missing_call(0x80019640u, 0x80036A70u));
+            while ((sint32)moh_draft_missing_call(0x80019220u, 0x8003859Cu, 1u, 0x80037D90u, 128u) <= 0)
+            {
+                moh_draft_missing_call(0x80015B28u, 0x80035E00u);
+                moh_native_cd_reset();
+                moh_draft_missing_call(0x80015DB8u, 0u);
+                moh_draft_missing_call(0x80015DB8u, 0u);
+                moh_draft_missing_call(0x80019640u, 0x80036A70u);
+            }
+            while (r_u32(0x80038598u)) {}
+            result = r_u32(0x80038590u) + copied;
+            w_u32(0x80038590u, result);
+            moh_draft_missing_call(0x800154ECu, result, 0x80037D90u, file_size - copied);
+        }
+    }
+    else
+    {
+        w_u32(0x80038598u, 1u);
+        w_u32(0x800385A0u, moh_draft_missing_call(0x80019640u, 0x80036A70u));
+        while ((sint32)moh_draft_missing_call(0x80019220u, 0x8003859Cu, 1u, 0x80037D90u, 128u) <= 0)
+        {
+            moh_draft_missing_call(0x80015B28u, 0x80035E34u);
+            moh_native_cd_reset();
+            moh_draft_missing_call(0x80015DB8u, 0u);
+            moh_draft_missing_call(0x80015DB8u, 0u);
+            moh_draft_missing_call(0x80019640u, 0x80036A70u);
+        }
+        while (r_u32(0x80038598u)) {}
+        moh_draft_missing_call(0x800154ECu, r_u32(0x80038590u), 0x80037D90u, file_size);
+    }
+finish:
+    if (allocation) w_u8(allocation + file_size, 0u);
+    if (size_address) w_u32(size_address, file_size);
+    return allocation;
 }
 
 uint32 sub_800374EC(uint32 a0, uint32 a1)
@@ -676,7 +814,7 @@ uint32 sub_800374EC(uint32 a0, uint32 a1)
     uint32 position_storage[2];
     uint32 component, position, directory = 0x80038E38u, records = 0x80039638u;
     uint32 hashes = 0x80039A38u, checksum = 0u, fresh = 0u, cursor = a1, level;
-    uint32 name, record, hash, found, result, length, remaining, word, shift;
+    uint32 name, record, hash, found, result, length, remaining, word, shift, cache_search;
     /* TODO Guest-local adapters and oversized component aliasing are unresolved */
     component = moh_draft_local_address(component_storage, sizeof(component_storage));
     position = moh_draft_local_address(position_storage, sizeof(position_storage));
@@ -743,7 +881,8 @@ uint32 sub_800374EC(uint32 a0, uint32 a1)
             return a0;
         }
         name = directory; record = records; hash = hashes; found = 0u;
-        if (r_u8(0x80039D44u) && !fresh)
+        cache_search = r_u8(0x80039D44u) && !fresh;
+        if (cache_search)
         {
             while (name < r_u32(0x80039D34u))
             {
@@ -765,7 +904,7 @@ uint32 sub_800374EC(uint32 a0, uint32 a1)
                 return 0xFFFFFFFFu;
             }
             length = sub_8001AC88(component);
-            if (!r_u8(0x80039D44u) || fresh)
+            if (!cache_search)
             {
                 record = r_u32(0x80039D3Cu);
                 w_u8(0x80039D44u, 1u);
@@ -865,10 +1004,10 @@ no_slot:
     return 0xFFFFFFFFu;
 }
 
-static uint32 moh_draft_cd_timeout(void)
+uint32 moh_draft_cd_timeout(void)
 {
     uint32 now = moh_draft_missing_call(0x80015DB8u, 0xFFFFFFFFu);
-    uint32 iterations;
+    uint32 iterations, sync, ready, label, ready_name, command, command_name, sync_name;
     if ((sint32)r_u32(0x800D0D3Cu) >= (sint32)now)
     {
         iterations = r_u32(0x800D0D40u);
@@ -876,16 +1015,20 @@ static uint32 moh_draft_cd_timeout(void)
         if ((sint32)iterations <= 3932160) return 0u;
     }
     moh_draft_missing_call(0x800224B0u, 0x80015178u);
+    sync = r_u8(0x80035320u);
+    ready = r_u8(0x80035321u);
+    label = r_u32(0x800D0D44u);
+    ready_name = r_u32(0x800350E8u + 4u * ready);
+    command = r_u8(0x80035061u);
+    command_name = r_u32(0x80035068u + 4u * command);
+    sync_name = r_u32(0x800350E8u + 4u * sync);
     /* Keep the fifth printf argument originally passed on the stack */
-    moh_draft_missing_call(0x80015B28u, 0x80015188u, r_u32(0x800D0D44u),
-        r_u32(0x80035068u + ((uint32)r_u8(0x80035061u) << 2)),
-        r_u32(0x800350E8u + ((uint32)r_u8(0x80035320u) << 2)),
-        r_u32(0x800350E8u + ((uint32)r_u8(0x80035321u) << 2)));
+    moh_draft_missing_call(0x80015B28u, 0x80015188u, label, command_name, sync_name, ready_name);
     sub_80027A18();
     return 0xFFFFFFFFu;
 }
 
-static void moh_draft_cd_dispatch(uint32 site)
+void moh_draft_cd_dispatch(uint32 site)
 {
     uint32 port, saved_bank, flags, callback;
     if (!sub_8001CB9C()) return;
@@ -893,7 +1036,6 @@ static void moh_draft_cd_dispatch(uint32 site)
     saved_bank = r_u8(port) & 3u;
     for (;;)
     {
-        /* TODO Recover volatile inputs to this selected helper's provisional four-argument API */
         flags = sub_80026AD8();
         if (!flags) break;
         if (flags & 4u)

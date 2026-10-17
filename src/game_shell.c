@@ -78,7 +78,7 @@ uint32 shell_sub_8005F7A0(uint32 packet_count, uint32 secondary)
 {
     uint32 pointer;
     FUNCTION_MARKER(0x8005F7A0u, "SHELL.BIN");
-    sub_80016B60(3u);
+    moh_native_reset_graph(3u);
     SetGraphDebug(0);
     memset(moh_draft_guest_pointer(0x8007BE5Cu, 0x14Cu), 0, 0x14Cu);
     pointer = sub_80036BF0(0x1800u);
@@ -1994,7 +1994,7 @@ void shell_sub_800631D0(void)
     sub_800203F8();
     moh_draft_missing_call(0x800156DCu, 0x66FFFu);
     moh_draft_missing_call(0x80020268u, 0x19000u);
-    sub_8001582C();
+    moh_native_sound_init();
     moh_draft_missing_call(0x8001FDB8u, 1u);
     moh_draft_missing_call(0x8001E4DCu, 127u, 127u);
     moh_draft_missing_call(0x80020138u);

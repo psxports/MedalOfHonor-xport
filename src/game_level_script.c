@@ -1,5 +1,15 @@
+#include "psx.h"
 #include "game_draft_signatures.h"
 #include "game_level_signatures.h"
+
+uint32 level_sub_8005C210(uint32 object, uint32 data, uint32 flags)
+{
+    uint32 message;
+    FUNCTION_MARKER(0x8005C210u, "LEVEL.BIN");
+    message = level_sub_8005D148(1u, flags, r_u16(data), object);
+    level_sub_800662CC(message, object, 0u, 0u);
+    return data + 4u;
+}
 
 static uint32 script_stack(uint32 index)
 {
@@ -23,7 +33,6 @@ static uint32 script_unsigned_float(uint32 value)
 static void script_undefined_result(uint32 opcode)
 {
     /* TODO The original reads uninitialized result words for this first unsupported pair */
-    (void)opcode;
     moh_draft_fail_fast("Undefined arithmetic result in LEVEL script", 0x800672E0u);
 }
 

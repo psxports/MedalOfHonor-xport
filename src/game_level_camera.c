@@ -470,26 +470,10 @@ uint32 level_sub_8003EF5C(uint32 end, uint32 start, uint32 normal_out, uint32 hi
 
 uint32 sub_80016A10(uint32 input, uint32 output)
 {
-    uint32 vector[3], axis, sum, leading, shift, normalized;
-    sint32 scale_shift;
-    VECTOR source, squares, product;
-    SVECTOR narrowed;
+    uint32 x, y, z;
     FUNCTION_MARKER(0x80016A10u, "SLUS_009.74");
-    for (axis = 0u; axis < 3u; ++axis) vector[axis] = r_u32(input + axis * 4u);
-    source.vx = (sint32)vector[0]; source.vy = (sint32)vector[1]; source.vz = (sint32)vector[2]; source.pad = 0;
-    Square0(&source, &squares);
-    sum = (uint32)squares.vx + (uint32)squares.vy + (uint32)squares.vz;
-    /* Native Lzc provides the normalization count without a guest CPU register frame */
-    leading = (uint32)Lzc((sint32)sum) & 0xFFFFFFFEu;
-    shift = (uint32)((sint32)(31u - leading) >> 1) & 31u;
-    scale_shift = (sint32)(leading - 24u);
-    normalized = scale_shift < 0 ? (uint32)((sint32)sum >> ((24u - leading) & 31u)) : sum << ((uint32)scale_shift & 31u);
-    narrowed.vx = (sint16)vector[0]; narrowed.vy = (sint16)vector[1]; narrowed.vz = (sint16)vector[2]; narrowed.pad = 0;
-    gte_gpf0(&narrowed, (sint16)r_u16(0x8002DD3Cu + (normalized - 64u) * 2u), &product);
-    vector[0] = (uint32)(product.vx >> shift); vector[1] = (uint32)(product.vy >> shift); vector[2] = (uint32)(product.vz >> shift);
-    for (axis = 0u; axis < 3u; ++axis) w_u32(output + axis * 4u, vector[axis]);
-    /* TODO Architectural LZCS and LZCR side effects are outside this native adapter */
-    return sum;
+    x = r_u32(input); y = r_u32(input + 4u); z = r_u32(input + 8u);
+    return sub_80016A70(x, y, z, output);
 }
 
 uint32 sub_80016578(uint32 left, uint32 right, uint32 output)

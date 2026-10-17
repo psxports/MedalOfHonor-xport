@@ -94,7 +94,6 @@ uint32 level_sub_80080DD4(uint32 render, uint32 ordering_table, uint32 buffer_in
     sint32 depth, bucket;
     PsxGteSnapshot snapshot;
     FUNCTION_MARKER(0x80080DD4u, "LEVEL.BIN");
-    (void)buffer_index;
     if (!r_u32(render + 0x88u)) return 0u;
     geometry = r_u32(render + 0x84u); descriptor = r_u32(render + 0x7Cu);
     material = r_u32(r_u32(r_u32(render + 0x74u) + 4u) + 4u); model = r_u32(render + 0x80u);
@@ -255,7 +254,6 @@ void level_sub_80085648(uint32 object, uint32 render)
     sint32 frame, animation, prior_frame, transition, override_frame, elapsed, position[3], old;
     uint32 count, current, previous, output, table, packed, axis;
     FUNCTION_MARKER(0x80085648u, "LEVEL.BIN");
-    (void)object;
     frame = (sint16)r_u16(render + 0x5Eu); animation = (sint16)r_u16(render + 0x5Cu);
     prior_frame = (sint16)r_u16(render + 0x60u); transition = (sint16)r_u16(render + 0x3Eu);
     if (animation < 0) { w_u16(render + 0x62u, 0xFFFFu); w_u16(render + 0x64u, 0xFFFFu); return; }
@@ -376,7 +374,6 @@ uint32 level_sub_80082948(uint32 render, uint32 ordering_table, uint32 buffer_in
     uint32 actor, owner, table, direct = 0u, visible, target, first, last;
     sint32 range, near_depth, step, index, candidate;
     FUNCTION_MARKER(0x80082948u, "LEVEL.BIN");
-    (void)shade;
     actor = moh_model_owner(render);
     if (actor) {
         owner = r_u32(render + 0x58u);
@@ -747,14 +744,14 @@ static void moh_subdivision_record(uint32 record, const MohSubdivisionVertex ver
     w_u16(record + 38u, clut); w_u16(record + 42u, page); w_u8(record + 51u, code);
 }
 
-uint32 sub_80010A7C(uint32 triangle, uint32 packet)
+uint32 sub_80010A7C(uint32 triangle, uint32 packet, uint32 first_depth, uint32 second_depth, uint32 third_depth)
 {
     uint32 d0, d1, d2, high, low, average, index, screen[3], uv0, uv1, uv2, colors[3], tag, header;
     FUNCTION_MARKER(0x80010A7Cu, "SLUS_009.74");
-    d0 = r_u16(triangle + 6u); d1 = r_u16(triangle + 14u); d2 = r_u16(triangle + 22u);
+    d0 = first_depth; d1 = second_depth; d2 = third_depth;
     high = d0 > d1 ? d0 : d1; low = d0 > d1 ? d1 : d0;
     if (d2 > high) high = d2; if (d2 < low) low = d2;
-    average = (high * 3u + low) >> 4u;
+    average = (uint32)((sint32)(high * 3u + low) >> 4);
     if ((sint32)average <= 0) return packet;
     for (index = 0u; index < 3u; ++index) screen[index] = r_u32(triangle + 24u + index * 4u);
     uv0 = r_u32(triangle + 36u); uv1 = r_u32(triangle + 40u); uv2 = r_u16(triangle + 44u);
@@ -793,8 +790,8 @@ uint32 sub_80010000(uint32 triangle, uint32 packet, uint32 mask, uint32 depth)
     a = input[order[0]]; b = input[order[1]]; c = input[order[2]];
     clut = r_u16(triangle + 38u); page = r_u16(triangle + 42u); code = r_u8(triangle + 51u);
     count = mode == 1u || mode == 2u || mode == 4u ? 3u : 4u;
-    records = sub_80016718(count * 60u);
-    if (!records) moh_draft_fail_fast("Subdivision records allocation", 0x80010000u);
+    records = r_u32(0x1F800000u);
+    w_u32(0x1F800000u, records + count * 60u);
     if (count == 3u) {
         ab = moh_subdivision_midpoint(a, b); ac = moh_subdivision_midpoint(a, c);
         output[0] = a; output[1] = ab; output[2] = ac;
@@ -806,11 +803,11 @@ uint32 sub_80010000(uint32 triangle, uint32 packet, uint32 mask, uint32 depth)
         generated = ((sint32)ab.flags < 0 ? 16u : 0u) | (ab.depth < near ? 2u : 0u) |
             ((sint32)ac.flags < 0 ? 32u : 0u) | (ac.depth < near ? 4u : 0u);
         child_mask = generated | (mask & 9u);
-        packet = (child_mask & 6u) && depth ? sub_80010000(records, packet, child_mask, depth - 1u) : sub_80010A7C(records, packet);
+        packet = (child_mask & 6u) && depth ? sub_80010000(records, packet, child_mask, depth - 1u) : sub_80010A7C(records, packet, ab.depth, ac.depth, ac.depth);
         child_mask = ((generated & 0x12u) >> 1u) | (generated & 0x24u);
-        packet = (child_mask & 5u) && depth ? sub_80010000(records + 60u, packet, child_mask, depth - 1u) : sub_80010A7C(records + 60u, packet);
+        packet = (child_mask & 5u) && depth ? sub_80010000(records + 60u, packet, child_mask, depth - 1u) : sub_80010A7C(records + 60u, packet, r_u16(records + 66u), r_u16(records + 74u), r_u16(records + 82u));
         child_mask = generated & 0x24u;
-        packet = (child_mask & 4u) && depth ? sub_80010000(records + 120u, packet, child_mask, depth - 1u) : sub_80010A7C(records + 120u, packet);
+        packet = (child_mask & 4u) && depth ? sub_80010000(records + 120u, packet, child_mask, depth - 1u) : sub_80010A7C(records + 120u, packet, r_u16(records + 126u), r_u16(records + 134u), r_u16(records + 142u));
     } else {
         ac = moh_subdivision_midpoint(a, c); bc = moh_subdivision_midpoint(b, c); ab = moh_subdivision_midpoint(a, b);
         output[0] = a; output[1] = ab; output[2] = ac;
@@ -824,18 +821,19 @@ uint32 sub_80010000(uint32 triangle, uint32 packet, uint32 mask, uint32 depth)
         generated = ((sint32)ac.flags < 0 ? 8u : 0u) | (ac.depth < near ? 1u : 0u) |
             ((sint32)ab.flags < 0 ? 16u : 0u) | (ab.depth < near ? 2u : 0u) |
             ((sint32)bc.flags < 0 ? 32u : 0u) | (bc.depth < near ? 4u : 0u);
-        packet = (generated & 7u) && (sint32)(depth - 1u) >= 0 ? sub_80010000(records + 180u, packet, generated, depth - 1u) : sub_80010A7C(records + 180u, packet);
+        packet = (generated & 7u) && (sint32)(depth - 1u) >= 0 ? sub_80010000(records + 180u, packet, generated, depth - 1u) : sub_80010A7C(records + 180u, packet, ac.depth, bc.depth, ab.depth);
         child_mask = (generated & 0x12u) | ((generated & 9u) << 2u);
         if ((child_mask & 6u) && depth) {
             child_mask |= mask & (9u << order[0]);
             packet = sub_80010000(records, packet, child_mask, depth - 1u);
-        } else packet = sub_80010A7C(records, packet);
+        } else packet = sub_80010A7C(records, packet, r_u16(records + 6u), r_u16(records + 14u), r_u16(records + 22u));
         child_mask = ((generated & 0x12u) >> 1u) | (generated & 0x24u) | (mask & (9u << order[1]));
-        packet = (child_mask & 5u) && (sint32)(depth - 1u) >= 0 ? sub_80010000(records + 60u, packet, child_mask, depth - 1u) : sub_80010A7C(records + 60u, packet);
+        packet = (child_mask & 5u) && (sint32)(depth - 1u) >= 0 ? sub_80010000(records + 60u, packet, child_mask, depth - 1u) : sub_80010A7C(records + 60u, packet, r_u16(records + 66u), r_u16(records + 74u), r_u16(records + 82u));
         child_mask = (generated & 9u) | ((generated & 0x24u) >> 1u) | (mask & (9u << order[2]));
-        packet = (child_mask & 3u) && (sint32)(depth - 1u) >= 0 ? sub_80010000(records + 120u, packet, child_mask, depth - 1u) : sub_80010A7C(records + 120u, packet);
+        packet = (child_mask & 3u) && (sint32)(depth - 1u) >= 0 ? sub_80010000(records + 120u, packet, child_mask, depth - 1u) : sub_80010A7C(records + 120u, packet, r_u16(records + 126u), r_u16(records + 134u), r_u16(records + 142u));
     }
-    sub_80036E44(records); return packet;
+    w_u32(0x1F800000u, r_u32(0x1F800000u) - count * 60u);
+    return packet;
 }
 
 static void moh_scene_vertices(uint32 vertices, const uint32 ids[3], uint32 short_z)
@@ -1010,9 +1008,9 @@ uint32 sub_80011214(uint32 next_triangle, uint32 vertices)
 static sint32 moh_light_quotient(uint32 distance, uint32 divisor)
 {
     sint32 numerator = (sint32)(distance << 8u), denominator = (sint32)divisor;
-    /* TODO Original division exceptions fail fast on native */
-    if (!denominator || (numerator == (sint32)0x80000000u && denominator == -1))
-        moh_draft_fail_fast("Scene light division", 0x800114B0u);
+    /* Retain the defined MIPS quotient for zero and overflow */
+    if (!denominator) return numerator < 0 ? 1 : -1;
+    if (numerator == (sint32)0x80000000u && denominator == -1) return numerator;
     return numerator / denominator;
 }
 

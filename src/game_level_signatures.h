@@ -1,6 +1,8 @@
 #ifndef MOH_GAME_LEVEL_SIGNATURES_H
 #define MOH_GAME_LEVEL_SIGNATURES_H
 #include "game_draft_signatures.h"
+void level_sub_8005CB00(uint32 object, uint32 property, uint32 bits);
+uint32 level_sub_80059E40(uint32 object, uint32 data, uint32 flags);
 uint32 level_sub_80056250(uint32 object, uint32 flags);
 uint32 level_sub_8003FFA4(uint32 object);
 uint32 level_sub_80058420(uint32 object, uint32 data, uint32 frame);
@@ -26,6 +28,9 @@ uint32 level_sub_800702E0(uint32 x, uint32 y, uint32 z, uint32 direction, uint32
 uint32 level_sub_800705EC(uint32 position, uint32 normal, uint32 strength, uint32 start_color, uint32 end_color);
 uint32 level_sub_80073BA8(uint32 position, uint32 spread, uint32 count, uint32 velocity_base, uint32 velocity_range, uint32 color, uint32 color_range, uint32 texture_x, uint32 texture_y, uint32 clut_x, uint32 clut_y, uint32 texture_mode, uint32 scale, uint32 smoke_enabled, uint32 smoke_count);
 uint32 level_sub_8004E354(uint32 position, uint32 record);
+uint32 level_sub_8005C210(uint32 object, uint32 data, uint32 flags);
+uint32 level_sub_8005B23C(uint32 object, uint32 data, uint32 flags);
+uint32 level_sub_80040F48(uint32 object, uint32 radius, uint32 excluded, uint32 mask, uint32 unused);
 void level_sub_8004E01C(uint32 width, uint32 height, uint32 position);
 void level_sub_8004E1B8(uint32 width, uint32 height, uint32 position);
 void level_sub_80044470(uint32 object);

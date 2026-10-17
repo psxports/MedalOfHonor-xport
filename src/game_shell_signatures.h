@@ -2,6 +2,43 @@
 #define MOH_GAME_SHELL_SIGNATURES_H
 
 #include "game_draft_signatures.h"
+void shell_sub_8003D078(uint32 name, uint32 unused, uint32 size_out, uint32 reuse_buffer);
+uint32 shell_sub_8003D0B4(uint32 name, uint32 size_out, uint32 buffer);
+uint32 shell_sub_8003D2CC(uint32 output, uint32 name, uint32 device_prefix);
+void shell_sub_8003DF34(uint32 screen);
+void shell_sub_8003DF68(uint32 screen);
+void shell_sub_8003DF8C(uint32 screen);
+void shell_sub_8003E994(uint32 screen);
+void shell_sub_800400AC(uint32 screen);
+void shell_sub_800400D0(uint32 screen);
+void shell_sub_80040E64(uint32 screen, uint32 enabled);
+void shell_sub_80041DF0(uint32 screen);
+void shell_sub_80041E44(uint32 screen);
+void shell_sub_80042ED4(uint32 screen);
+void shell_sub_80042F40(uint32 screen);
+void shell_sub_80042F64(uint32 screen);
+void shell_sub_80043138(uint32 screen);
+void shell_sub_80043850(uint32 screen);
+void shell_sub_80043874(uint32 screen);
+void shell_sub_800448BC(uint32 screen);
+uint32 shell_sub_8004558C(void);
+uint32 shell_sub_80077C30(uint32 poll, uint32 command_out, uint32 result_out);
+void shell_sub_80040DB0(uint32 screen, uint32 selection);
+uint32 shell_sub_80042BAC(void);
+void shell_sub_800437A4(uint32 screen);
+void shell_sub_800454D0(void);
+uint32 shell_sub_80045F10(uint32 status);
+void shell_sub_800462CC(uint32 text, uint32 encoded);
+void shell_sub_80046358(uint32 encoded, uint32 text);
+uint32 shell_sub_800463F8(uint32 character);
+uint32 shell_sub_800464A0(uint32 character);
+uint32 shell_sub_800465A8(uint32 text);
+void shell_sub_80048830(uint32 unused, uint32 bit);
+void shell_sub_80048A10(uint32 screen);
+uint32 shell_sub_8004BEEC(uint32 screen);
+void shell_sub_8004C7A0(uint32 element, uint32 mode);
+void shell_sub_8004CA40(uint32 element);
+void shell_sub_8004CCAC(uint32 element);
 uint32 moh_native_movie_screen(uint32 screen);
 uint32 moh_native_play_movie(uint32 media);
 uint32 shell_title_find_screen(uint32 name, const char *host_name);

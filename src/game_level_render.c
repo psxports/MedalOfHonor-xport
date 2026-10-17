@@ -1320,7 +1320,7 @@ uint32 level_sub_80049540(uint32 filename)
         printf((const char *)moh_draft_guest_pointer(0x80039E34u, 1u),
             (const char *)moh_draft_guest_pointer(temporary, 1u), attempt);
         printf((const char *)moh_draft_guest_pointer(0x80039E5Cu, 1u), status);
-        sub_8001AD98();
+        moh_native_cd_reset();
         moh_draft_missing_call(0x80016E38u, 0u);
         moh_draft_missing_call(0x80015DB8u, 0u);
         moh_draft_missing_call(0x80015DB8u, 0u);
@@ -1454,7 +1454,7 @@ uint32 level_sub_8004A374(uint32 filename, uint32 count_out)
         printf((const char *)moh_draft_guest_pointer(0x80039E34u, 1u),
             (const char *)moh_draft_guest_pointer(path, 1u), attempt);
         printf((const char *)moh_draft_guest_pointer(0x80039E5Cu, 1u), status);
-        sub_8001AD98();
+        moh_native_cd_reset();
         moh_draft_missing_call(0x80016E38u, 0u);
         moh_draft_missing_call(0x80015DB8u, 0u);
         moh_draft_missing_call(0x80015DB8u, 0u);
@@ -1483,7 +1483,7 @@ read_header:
         printf((const char *)moh_draft_guest_pointer(0x80039E34u, 1u),
             (const char *)moh_draft_guest_pointer(path, 1u), attempt);
         printf((const char *)moh_draft_guest_pointer(0x80039E5Cu, 1u), status);
-        sub_8001AD98();
+        moh_native_cd_reset();
         moh_draft_missing_call(0x80016E38u, 0u);
         moh_draft_missing_call(0x80015DB8u, 0u);
         moh_draft_missing_call(0x80015DB8u, 0u);
@@ -1508,7 +1508,7 @@ read_header:
         printf((const char *)moh_draft_guest_pointer(0x80039E34u, 1u),
             (const char *)moh_draft_guest_pointer(path, 1u), attempt);
         printf((const char *)moh_draft_guest_pointer(0x80039E5Cu, 1u), status);
-        sub_8001AD98();
+        moh_native_cd_reset();
         moh_draft_missing_call(0x80016E38u, 0u);
         moh_draft_missing_call(0x80015DB8u, 0u);
         moh_draft_missing_call(0x80015DB8u, 0u);

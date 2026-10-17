@@ -1,3 +1,4 @@
+#include "psx.h"
 #include "game_shell_signatures.h"
 #include "xport_trace.h"
 
@@ -14,7 +15,6 @@ void shell_sub_8003F038(uint32 screen)
     shell_sub_8003F014(screen);
     shell_sub_80045328(r_u32(screen + 80u));
 }
-#include "psx.h"
 #include <stdlib.h>
 #include <string.h>
 

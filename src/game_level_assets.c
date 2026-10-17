@@ -716,7 +716,6 @@ uint32 level_sub_8005BD70(uint32 object, uint32 data)
 {
     uint32 context, depth;
     FUNCTION_MARKER(0x8005BD70u, "LEVEL.BIN");
-    (void)object;
     context = r_u32(0x80099EC4u);
     depth = r_u16(context + 0x1Eu) - 1u;
     w_u16(context + 0x1Eu, depth);

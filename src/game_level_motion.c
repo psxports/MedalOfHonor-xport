@@ -1078,7 +1078,6 @@ void level_sub_80089A0C(uint32 view)
 uint32 level_sub_80053BD4(uint32 buffer_index, uint32 end_out)
 {
     FUNCTION_MARKER(0x80053BD4u, "LEVEL.BIN");
-    (void)buffer_index;
     w_u32(end_out, r_u32(0x8009895Cu)); return r_u32(0x80098958u);
 }
 
@@ -1093,7 +1092,6 @@ void level_sub_80088280(uint32 view, uint32 buffer_index, uint32 ordering_table)
     uint32 axis, packet, x1, y1, x2, y3;
     PsxGteSnapshot snapshot;
     FUNCTION_MARKER(0x80088280u, "LEVEL.BIN");
-    (void)view;
     for (axis = 0u; axis < 6u; ++axis) xport_gte_write_data(axis, r_u32(0x800B7AF0u + axis * 4u));
     xport_gte_execute(0x280030u); psx_gte_snapshot(&snapshot);
     if ((sint32)snapshot.flag < 0) return;

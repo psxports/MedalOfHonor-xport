@@ -799,27 +799,31 @@ void level_sub_8007CAF8(uint32 object, uint32 first, uint32 second)
     level_sub_80053BF4(packet + 64u); sub_80036E44(local);
 }
 
-void sub_80013F98(uint32 ordering_tag, uint32 last, uint32 end)
+uint32 sub_80013F98(uint32 ordering_tag, uint32 last, uint32 end)
 {
-    uint32 header, next, tail, node, tag;
+    uint32 header, next, tail, node, tag, result;
     FUNCTION_MARKER(0x80013F98u, "SLUS_009.74");
     header = r_u32(last); end &= 0xFFFFFFu;
     for (;;) {
         next = header & 0xFFFFFFu;
+        result = header >> 24u;
         if ((header >> 24u) >= 2u) break;
         last = next | 0x80000000u;
-        if (next == end) return;
+        if (next == end) return result;
         header = r_u32(last);
     }
     tail = r_u32(ordering_tag); w_u32(ordering_tag, last & 0xFFFFFFu);
     while (next != end) {
         node = next | 0x80000000u; tag = r_u32(node); next = tag & 0xFFFFFFu;
+        result = tag >> 24u;
         if ((tag >> 24u) >= 2u) {
+            result = node & 0xFFFFFFu;
             w_u32(last, (header & 0xFF000000u) | (node & 0xFFFFFFu));
             header = tag; last = node;
         }
     }
     w_u32(last, (header & 0xFF000000u) | (tail & 0xFFFFFFu));
+    return result;
 }
 
 uint32 sub_80013E58(uint32 quaternion, uint32 matrix)
@@ -855,9 +859,64 @@ uint32 sub_80013E58(uint32 quaternion, uint32 matrix)
 
 void sub_80013AE4(uint32 node, uint32 matrix, uint32 output, uint32 render)
 {
+    uint32 local_words[8];
     uint32 id, quaternions, local, axis, word, magnitude, high[3], low[3], product[3], translation[3];
     uint32 table, vertices, count, destination, index, point, child, positions, x, y, z;
     FUNCTION_MARKER(0x80013AE4u, "SLUS_009.74");
+    id = r_u16(node); word = r_u32(0x8009EAB4u); quaternions = r_u32(render + 0x88u);
+    if (id > word || !quaternions) return;
+    /* TODO Native address bridge for the original addressable local matrix */
+    local = moh_draft_local_address(local_words, sizeof(local_words));
+    sub_80013E58(quaternions + id * 8u, local);
+    for (axis = 0u; axis < 3u; ++axis) {
+        word = (uint32)(sint32)(sint16)r_u16(node + 2u + axis * 2u) << 19u;
+        if ((sint32)word < 0) {
+            magnitude = 0u - word;
+            high[axis] = 0u - (uint32)((sint32)magnitude >> 15);
+            low[axis] = 0u - (magnitude & 0x7FFFu);
+        } else { high[axis] = (uint32)((sint32)word >> 15); low[axis] = word & 0x7FFFu; }
+    }
+    for (axis = 0u; axis < 3u; ++axis) xport_gte_write_data(9u + axis, high[axis]);
+    for (axis = 0u; axis < 5u; ++axis) xport_gte_write_control(axis, r_u32(matrix + axis * 4u));
+    xport_gte_execute(0x41E012u);
+    for (axis = 0u; axis < 3u; ++axis) product[axis] = xport_gte_read_data(25u + axis);
+    for (axis = 0u; axis < 3u; ++axis) xport_gte_write_data(9u + axis, low[axis]);
+    xport_gte_execute(0x49E012u);
+    for (axis = 0u; axis < 3u; ++axis) translation[axis] = r_u32(matrix + 20u + axis * 4u);
+    for (axis = 0u; axis < 3u; ++axis)
+        translation[axis] += xport_gte_read_data(25u + axis) + (product[axis] << 3u);
+    for (axis = 0u; axis < 3u; ++axis)
+        xport_gte_write_control(5u + axis, (uint32)((sint32)((translation[axis] << 1u) + 0x80000u) >> 20));
+    table = r_u32(render + 0x80u);
+    for (axis = 0u; axis < 4u; ++axis) xport_gte_write_control(axis, r_u32(local + axis * 4u));
+    table = r_u32(table); xport_gte_write_control(4u, r_u32(local + 16u));
+    word = r_u32(0x8009EAB8u); w_u32(local + 20u, translation[0]);
+    if (id > word) return;
+    w_u32(local + 24u, translation[1]); w_u32(local + 28u, translation[2]);
+    vertices = r_u32(table + id * 8u); count = r_u32(table + id * 8u + 4u);
+    word = r_u32(0x1F8003FCu); destination = r_u32(0x8009EABCu);
+    w_u32(0x1F8003FCu, word + count); w_u32(output + id * 4u, destination);
+    w_u32(0x8009EABCu, destination + count * 8u);
+    index = 0u;
+    while (index != count) {
+        point = vertices + index * 8u;
+        xport_gte_write_data(0u, r_u32(point)); xport_gte_write_data(1u, r_u32(point + 4u));
+        xport_gte_execute(0x480012u);
+        point = destination + index * 8u; ++index;
+        x = xport_gte_read_data(25u); y = xport_gte_read_data(26u); z = xport_gte_read_data(27u);
+        w_u16(point, (uint16)x); w_u16(point + 2u, (uint16)y); w_u16(point + 4u, (uint16)z);
+    }
+    child = r_u32(node + 16u); if (child) sub_80013AE4(child, matrix, output, render);
+    child = r_u32(node + 12u); if (child) sub_80013AE4(child, local, output, render);
+    positions = r_u32(render + 0x94u) + id * 8u;
+    for (axis = 0u; axis < 3u; ++axis)
+        w_u16(positions + axis * 2u, (uint16)((sint32)((translation[axis] << 1u) + 0x80000u) >> 20));
+}
+
+void moh_native_model_transform(uint32 node, uint32 matrix, uint32 output, uint32 render)
+{
+    uint32 id, quaternions, local, axis, word, magnitude, high[3], low[3], product[3], translation[3];
+    uint32 table, vertices, count, destination, index, point, child, positions, x, y, z;
     id = r_u16(node); word = r_u32(0x8009EAB4u); quaternions = r_u32(render + 0x88u);
     if (id > word || !quaternions) return;
     local = sub_80016718(32u);
@@ -901,8 +960,8 @@ void sub_80013AE4(uint32 node, uint32 matrix, uint32 output, uint32 render)
         x = xport_gte_read_data(25u); y = xport_gte_read_data(26u); z = xport_gte_read_data(27u);
         w_u16(point, (uint16)x); w_u16(point + 2u, (uint16)y); w_u16(point + 4u, (uint16)z);
     }
-    child = r_u32(node + 16u); if (child) sub_80013AE4(child, matrix, output, render);
-    child = r_u32(node + 12u); if (child) sub_80013AE4(child, local, output, render);
+    child = r_u32(node + 16u); if (child) moh_native_model_transform(child, matrix, output, render);
+    child = r_u32(node + 12u); if (child) moh_native_model_transform(child, local, output, render);
     positions = r_u32(render + 0x94u) + id * 8u;
     for (axis = 0u; axis < 3u; ++axis)
         w_u16(positions + axis * 2u, (uint16)((sint32)((translation[axis] << 1u) + 0x80000u) >> 20));
@@ -1279,14 +1338,12 @@ void level_sub_8007BD1C(uint32 object)
 uint32 level_sub_80058C38(uint32 object, uint32 instruction, uint32 flags)
 {
     FUNCTION_MARKER(0x80058C38u, "LEVEL.BIN");
-    (void)flags;
     return moh_draft_missing_call(0x80058C78u, object, instruction);
 }
 
 uint32 level_sub_80058C58(uint32 object, uint32 instruction, uint32 flags)
 {
     FUNCTION_MARKER(0x80058C58u, "LEVEL.BIN");
-    (void)flags;
     return moh_draft_missing_call(0x80058C78u, object, instruction);
 }
 
@@ -1317,7 +1374,6 @@ uint32 level_sub_80057D9C(uint32 object, uint32 instruction, uint32 flags)
     uint32 first, second, material;
     sint32 mode, lookup;
     FUNCTION_MARKER(0x80057D9Cu, "LEVEL.BIN");
-    (void)flags;
     packed = (uint32)r_u16(instruction);
     instance = r_u32(object + 0x100u);
     mode = (sint32)(sint16)packed >> 12;
@@ -1423,7 +1479,6 @@ void level_sub_80064858(uint32 format, ...)
 {
     FUNCTION_MARKER(0x80064858u, "LEVEL.BIN");
     /* Original trace is disabled; argument-home stores are omitted for ordinary C ABI */
-    (void)format;
 }
 
 uint32 level_sub_80066C14(uint32 message, uint32 actor, uint32 trigger, uint32 filter,
@@ -1828,7 +1883,6 @@ void level_sub_80076160(uint32 controller, uint32 slot)
 uint32 level_sub_8007BA20(uint32 player, uint32 state)
 {
     FUNCTION_MARKER(0x8007BA20u, "LEVEL.BIN");
-    (void)player;
     if (!(r_u32(state) & 0x20u)) {
         switch (r_u8(state + 0x55u)) {
         case 0: case 4: case 5: case 8: case 9: case 12: return 7u;

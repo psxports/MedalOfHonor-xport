@@ -1,1104 +1,629 @@
+#include "psx.h"
 #include "game_draft_signatures.h"
 #include <stdint.h>
 
 /* Unverified draft from full original pseudocode */
 uint32 sub_80026AD8(void)
 {
-    /* TODO Memory adapter lifetime, pointer widths and unresolved volatile carriers */
-
-
-  sint32 v4; 
-  sint32 v5; 
-  unsigned char *v6; 
-  sint32 v7; 
-  unsigned char *v8; 
-  sint32 v9; 
-  sint32 *v10; 
-  sint32 k; 
-  char v12; 
-  sint32 result; 
-  sint32 v14; 
-  sint32 *v15; 
-  sint32 m; 
-  char v17; 
-  sint32 v18; 
-  sint32 *v19; 
-  sint32 n; 
-  char v21; 
-  char v22; 
-  sint32 v23; 
-  sint32 *v24; 
-  sint32 j; 
-  char v26; 
-  char v27; 
-  sint32 v28; 
-  sint32 *v29; 
-  sint32 i; 
-  char v31; 
-  sint32 v32; 
-  sint32 *v33; 
-  sint32 ii; 
-  char v35; 
-  sint32 v36; 
-  sint32 *v37; 
-  sint32 jj; 
-  char v39; 
-  sint32 v40; 
-  sint32 *v41; 
-  sint32 kk; 
-  char v43; 
-  sint32 v44; 
-  sint32 *v45; 
-  sint32 mm; 
-  char v47; 
-  sint32 v50; 
-  uint32 response[2];
-#define v52 response[0]
-#define v53 response[1] 
- 
-
-  *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035308u, sizeof(sint32)))), 1u) = 1;
-  (*(unsigned char *)&v50) = *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x8003530Cu, sizeof(sint32)))), 1u) & 7;
-  v4 = 0;
-  if ( !(unsigned char)v50 )
-    return 0;
-  while ( 1 )
-  {
-    v5 = 0;
-    if ( (unsigned char)v50 == (*(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x8003530Cu, sizeof(sint32)))), 1u) & 7) )
-      break;
-    (*(unsigned char *)&v50) = *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x8003530Cu, sizeof(sint32)))), 1u) & 7;
-  }
-  do
-  {
-    v6 = (char *)&v52 + v5;
-    if ( (*(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035308u, sizeof(sint32)))), 1u) & 0x20) == 0 )
-      break;
-    ++v5;
-    *v6 = *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035314u, sizeof(sint32)))), 1u);
-  }
-  while ( v5 < 8 );
-  v7 = v5;
-  if ( v5 < 8 )
-  {
-    v8 = (char *)&v52 + v5;
+    uint8 response[8];
+    uint32 port, interrupt, count = 0u, index, error = 0u, command, status, code;
+    w_u8(r_u32(0x80035308u), 1u);
+    port = r_u32(0x8003530Cu);
+    interrupt = r_u8(port) & 7u;
+    if (!interrupt) return 0u;
+    while (interrupt != (r_u8(port) & 7u)) interrupt = r_u8(port) & 7u;
     do
     {
-      *v8 = 0;
-      ++v7;
-      v8 = (char *)&v52 + v7;
+        if (!(r_u8(r_u32(0x80035308u)) & 32u)) break;
+        response[count++] = r_u8(r_u32(0x80035314u));
+    } while (count < 8u);
+    for (index = count; index < 8u; ++index) response[index] = 0u;
+    w_u8(r_u32(0x80035308u), 1u);
+    w_u8(r_u32(0x8003530Cu), 7u);
+    w_u8(r_u32(0x80035318u), 7u);
+    if (interrupt != 3u || r_u32(0x80035208u + 4u * r_u8(0x80035061u)))
+    {
+        if (!(r_u32(0x80035050u) & 16u) && (response[0] & 16u))
+            w_u32(0x80035058u, r_u32(0x80035058u) + 1u);
+        error = response[0] & 29u;
+        w_u32(0x80035050u, response[0]);
+        w_u32(0x80035054u, response[1]);
     }
-    while ( v7 < 8 );
-  }
-  *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035308u, sizeof(sint32)))), 1u) = 1;
-  *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x8003530Cu, sizeof(sint32)))), 1u) = 7;
-  *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035318u, sizeof(sint32)))), 1u) = 7;
-  if ( (unsigned char)v50 != 3 || ((sint32 *)moh_draft_guest_pointer(0x80035208u, 1u))[(unsigned char)(*(unsigned char *)moh_draft_guest_pointer(0x80035061u, sizeof(unsigned char)))] )
-  {
-    if ( ((*(sint32 *)moh_draft_guest_pointer(0x80035050u, sizeof(sint32))) & 0x10) == 0 && (v52 & 0x10) != 0 )
-      ++(*(sint32 *)moh_draft_guest_pointer(0x80035058u, sizeof(sint32)));
-    v4 = v52 & 0x1D;
-    (*(sint32 *)moh_draft_guest_pointer(0x80035050u, sizeof(sint32))) = (unsigned char)v52;
-    (*(sint32 *)moh_draft_guest_pointer(0x80035054u, sizeof(sint32))) = (((uint32)v52 >> 8) & 255u);
-  }
-  if ( (unsigned char)v50 == 5 && (*(sint32 *)moh_draft_guest_pointer(0x8003504Cu, sizeof(sint32))) >= 3 )
-  {
-    moh_draft_missing_call(0x80015B28u, (sint32)0x800151A4u);
-    if ( (*(sint32 *)moh_draft_guest_pointer(0x8003504Cu, sizeof(sint32))) >= 3 )
-      moh_draft_missing_call(0x80015B28u, (sint32)0x800151B0u, (sint32)((uint32 *)moh_draft_guest_pointer(0x80035068u, 1u))[(unsigned char)(*(unsigned char *)moh_draft_guest_pointer(0x80035061u, sizeof(unsigned char)))], (*(sint32 *)moh_draft_guest_pointer(0x80035050u, sizeof(sint32))), (*(sint32 *)moh_draft_guest_pointer(0x80035054u, sizeof(sint32))));
-  }
-  switch ( (char)v50 )
-  {
-    case 1:
-      if ( v4 && v5 == 1 )
-        v4 = 0;
-      v27 = 1;
-      if ( v4 )
-        v27 = 5;
-      (*(unsigned char *)moh_draft_guest_pointer(0x80035321u, sizeof(unsigned char))) = v27;
-      v28 = -2146628308;
-      v29 = &v52;
-      for ( i = 7; i != -1; --i )
-      {
-        v31 = *(unsigned char *)v29;
-        v29 = (sint32 *)((char *)v29 + 1);
-        *(unsigned char *)moh_draft_guest_pointer((uint32)(v28++), 1u) = v31;
-      }
-      *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035308u, sizeof(sint32)))), 1u) = 0;
-      result = 4;
-      *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x8003530Cu, sizeof(sint32)))), 1u) = 0;
-      break;
-    case 2:
-      v22 = 2;
-      if ( v4 )
-        v22 = 5;
-      (*(unsigned char *)moh_draft_guest_pointer(0x80035320u, sizeof(unsigned char))) = v22;
-      v23 = -2146628316;
-      v24 = &v52;
-      for ( j = 7; j != -1; --j )
-      {
-        v26 = *(unsigned char *)v24;
-        v24 = (sint32 *)((char *)v24 + 1);
-        *(unsigned char *)moh_draft_guest_pointer((uint32)(v23++), 1u) = v26;
-      }
-      result = 2;
-      break;
-    case 3:
-      if ( v4 )
-      {
-        (*(unsigned char *)moh_draft_guest_pointer(0x80035320u, sizeof(unsigned char))) = 5;
-        v9 = -2146628316;
-        v10 = &v52;
-        for ( k = 7; k != -1; --k )
+    if (interrupt == 5u && r_s32(0x8003504Cu) >= 3)
+    {
+        moh_draft_missing_call(0x80015B28u, 0x800151A4u);
+        if (r_s32(0x8003504Cu) >= 3)
         {
-          v12 = *(unsigned char *)v10;
-          v10 = (sint32 *)((char *)v10 + 1);
-          *(unsigned char *)moh_draft_guest_pointer((uint32)(v9++), 1u) = v12;
+            command = r_u8(0x80035061u);
+            status = r_u32(0x80035050u);
+            code = r_u32(0x80035054u);
+            moh_draft_missing_call(0x80015B28u, 0x800151B0u, r_u32(0x80035068u + 4u * command), status, code);
         }
-        result = 2;
-      }
-      else if ( ((sint32 *)moh_draft_guest_pointer(0x80035108u, 1u))[(unsigned char)(*(unsigned char *)moh_draft_guest_pointer(0x80035061u, sizeof(unsigned char)))] )
-      {
-        (*(unsigned char *)moh_draft_guest_pointer(0x80035320u, sizeof(unsigned char))) = 3;
-        v14 = -2146628316;
-        v15 = &v52;
-        for ( m = 7; m != -1; --m )
+    }
+    switch (interrupt)
+    {
+    case 1u:
+        if (error && count == 1u) error = 0u;
+        w_u8(0x80035321u, error ? 5u : 1u);
+        for (index = 0u; index < 8u; ++index) w_u8(0x800D0D2Cu + index, response[index]);
+        w_u8(r_u32(0x80035308u), 0u);
+        w_u8(r_u32(0x8003530Cu), 0u);
+        return 4u;
+    case 2u:
+        w_u8(0x80035320u, error ? 5u : 2u);
+        for (index = 0u; index < 8u; ++index) w_u8(0x800D0D24u + index, response[index]);
+        return 2u;
+    case 3u:
+        if (error)
         {
-          v17 = *(unsigned char *)v15;
-          v15 = (sint32 *)((char *)v15 + 1);
-          *(unsigned char *)v14++ = v17;
+            w_u8(0x80035320u, 5u);
+            for (index = 0u; index < 8u; ++index) w_u8(0x800D0D24u + index, response[index]);
+            return 2u;
         }
-        result = 1;
-      }
-      else
-      {
-        (*(unsigned char *)moh_draft_guest_pointer(0x80035320u, sizeof(unsigned char))) = 2;
-        v18 = -2146628316;
-        v19 = &v52;
-        for ( n = 7; n != -1; --n )
+        if (r_u32(0x80035108u + 4u * r_u8(0x80035061u)))
         {
-          v21 = *(unsigned char *)v19;
-          v19 = (sint32 *)((char *)v19 + 1);
-          *(unsigned char *)moh_draft_guest_pointer((uint32)(v18++), 1u) = v21;
+            w_u8(0x80035320u, 3u);
+            for (index = 0u; index < 8u; ++index) w_u8(0x800D0D24u + index, response[index]);
+            return 1u;
         }
-        result = 2;
-      }
-      break;
-    case 4:
-      v32 = -2146628300;
-      (*(unsigned char *)moh_draft_guest_pointer(0x80035322u, sizeof(unsigned char))) = 4;
-      v33 = &v52;
-      (*(unsigned char *)moh_draft_guest_pointer(0x80035321u, sizeof(unsigned char))) = 4;
-      for ( ii = 7; ii != -1; --ii )
-      {
-        v35 = *(unsigned char *)v33;
-        v33 = (sint32 *)((char *)v33 + 1);
-        *(unsigned char *)moh_draft_guest_pointer((uint32)(v32++), 1u) = v35;
-      }
-      v36 = -2146628308;
-      v37 = &v52;
-      for ( jj = 7; jj != -1; --jj )
-      {
-        v39 = *(unsigned char *)v37;
-        v37 = (sint32 *)((char *)v37 + 1);
-        *(unsigned char *)moh_draft_guest_pointer((uint32)(v36++), 1u) = v39;
-      }
-      result = 4;
-      break;
-    case 5:
-      v40 = -2146628316;
-      (*(unsigned char *)moh_draft_guest_pointer(0x80035321u, sizeof(unsigned char))) = 5;
-      v41 = &v52;
-      (*(unsigned char *)moh_draft_guest_pointer(0x80035320u, sizeof(unsigned char))) = 5;
-      for ( kk = 7; kk != -1; --kk )
-      {
-        v43 = *(unsigned char *)v41;
-        v41 = (sint32 *)((char *)v41 + 1);
-        *(unsigned char *)moh_draft_guest_pointer((uint32)(v40++), 1u) = v43;
-      }
-      v44 = -2146628308;
-      v45 = &v52;
-      for ( mm = 7; mm != -1; --mm )
-      {
-        v47 = *(unsigned char *)v45;
-        v45 = (sint32 *)((char *)v45 + 1);
-        *(unsigned char *)moh_draft_guest_pointer((uint32)(v44++), 1u) = v47;
-      }
-      result = 6;
-      break;
+        w_u8(0x80035320u, 2u);
+        for (index = 0u; index < 8u; ++index) w_u8(0x800D0D24u + index, response[index]);
+        return 2u;
+    case 4u:
+        w_u8(0x80035322u, 4u);
+        w_u8(0x80035321u, r_u8(0x80035322u));
+        for (index = 0u; index < 8u; ++index) w_u8(0x800D0D34u + index, response[index]);
+        for (index = 0u; index < 8u; ++index) w_u8(0x800D0D2Cu + index, response[index]);
+        return 4u;
+    case 5u:
+        w_u8(0x80035321u, 5u);
+        w_u8(0x80035320u, r_u8(0x80035321u));
+        for (index = 0u; index < 8u; ++index) w_u8(0x800D0D24u + index, response[index]);
+        for (index = 0u; index < 8u; ++index) w_u8(0x800D0D2Cu + index, response[index]);
+        return 6u;
     default:
-      moh_draft_missing_call(0x800224B0u, 0x800151CCu);
-      moh_draft_missing_call(0x80015B28u, (sint32)0x800151E0u, (unsigned char)v50);
-      return 0;
-  }
-  return result;
-}
-#undef v52
-#undef v53
-
-/* Unverified draft from full original pseudocode */
-uint32 sub_80025528(uint32 a1)
-{
-    /* TODO Memory adapter lifetime, pointer widths and unresolved volatile carriers */
-
-
-  sint32 v2; 
-  sint32 v3; 
-  sint32 v4; 
-  char v5; 
-  sint32 result; 
-  sint32 v7; 
-  sint32 v8; 
-  short v9; 
-  sint32 v10; 
-  sint32 v11; 
-  sint32 v12; 
-  sint32 v13; 
-  sint32 *v14; 
-  sint32 v15; 
-  sint32 v16; 
-  sint32 v17; 
-  sint32 v18; 
-  sint32 v19; 
-  unsigned char v20; 
-  sint32 v21; 
-  sint32 v22; 
-  short v23; 
-  sint32 v24; 
-  sint32 v25; 
-  sint32 v26; 
-  unsigned char v27; 
-  sint32 v28; 
-  sint32 v29; 
-  short v30; 
-  sint32 v31; 
-  sint32 v32; 
-  sint32 v33; 
-
-  if ( (*(sint32 *)moh_draft_guest_pointer(0x800347B8u, sizeof(sint32))) )
-    moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x80034740u, sizeof(sint32))), a1);
-  v2 = (*(sint32 *)moh_draft_guest_pointer(0x800347B8u, sizeof(sint32)));
-  v3 = -1;
-  if ( !(*(sint32 *)moh_draft_guest_pointer(0x800347B8u, sizeof(sint32))) )
-  {
-LABEL_15:
-    v12 = 0;
-    v13 = (*(sint32 *)moh_draft_guest_pointer(0x80034774u, sizeof(sint32))) == 0;
-    if ( (*(sint32 *)moh_draft_guest_pointer(0x800347B0u, sizeof(sint32))) < 2 )
-    {
-LABEL_36:
-      --(*(sint32 *)moh_draft_guest_pointer(0x800347B0u, sizeof(sint32)));
-      v26 = a1;
-      if ( (*(sint32 *)moh_draft_guest_pointer(0x800347B0u, sizeof(sint32))) <= 0 )
-      {
-LABEL_46:
-        while ( (*(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800347ACu, sizeof(sint32))) + 4)), 1u) & 2) == 0 )
-          ;
-        v33 = *(unsigned char *)moh_draft_guest_pointer((uint32)((a1 + 68)), 1u);
-        *(unsigned char *)moh_draft_guest_pointer((uint32)((a1 + 68)), 1u) = v33 + 1;
-        *(unsigned char *)moh_draft_guest_pointer((uint32)((v33 + *(uint32 *)(a1 + 60))), 1u) = *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x800347ACu, sizeof(sint32)))), 1u);
-        moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x80034734u, sizeof(sint32))), 0);
-        return 0;
-      }
-      else
-      {
-        while ( 1 )
-        {
-          v27 = moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x8003473Cu, sizeof(sint32))), v26, v2);
-          result = sub_80024328(a1, v27);
-          if ( result < 0 )
-            break;
-          v28 = (*(sint32 *)moh_draft_guest_pointer(0x800347ACu, sizeof(sint32)));
-          if ( *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800347ACu, sizeof(sint32))) + 14)), 1u) != 34 )
-          {
-            v29 = (*(sint32 *)moh_draft_guest_pointer(0x1F801120u, 4u));
-            *(uint32 *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x800347A8u, sizeof(sint32)))), 1u) = -129;
-            v30 = *(unsigned short *)moh_draft_guest_pointer((uint32)((v28 + 4)), 1u);
-            (*(sint32 *)moh_draft_guest_pointer(0x800D0A94u, 4u)) = 60;
-            (*(sint32 *)moh_draft_guest_pointer(0x800D0A90u, 4u)) = v29;
-            if ( (v30 & 0x80) != 0 )
-            {
-              while ( 1 )
-              {
-                v31 = sub_800251F8();
-                v32 = 0;
-                if ( v31 )
-                  break;
-                if ( (*(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800347ACu, sizeof(sint32))) + 4)), 1u) & 0x80) == 0 )
-                  goto LABEL_42;
-              }
-            }
-            else
-            {
-LABEL_42:
-              v32 = 1;
-              *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800347ACu, sizeof(sint32))) + 10)), 1u) |= 0x10u;
-            }
-            if ( !v32 )
-              return -3;
-          }
-          --(*(sint32 *)moh_draft_guest_pointer(0x800347B0u, sizeof(sint32)));
-          v26 = a1;
-          if ( (*(sint32 *)moh_draft_guest_pointer(0x800347B0u, sizeof(sint32))) <= 0 )
-            goto LABEL_46;
-        }
-      }
-      return result;
+        moh_draft_missing_call(0x800224B0u, 0x800151CCu);
+        moh_draft_missing_call(0x80015B28u, 0x800151E0u, interrupt);
+        return 0u;
     }
-    v14 = (sint32 *)moh_draft_guest_pointer(r_u32(0x8003478Cu + 4u * (uint32)v13), sizeof(sint32));
-    v15 = 240 * v13;
-    while ( 1 )
-    {
-      v16 = *v14;
-      if ( *v14 < 0 )
-        goto LABEL_36;
-      if ( v16 > 0 )
-      {
-        v12 = *(uint32 *)moh_draft_guest_pointer((uint32)((v15 + (*(sint32 *)moh_draft_guest_pointer(0x80034768u, sizeof(sint32))) + 12)), 1u) + 240 * v16 - 240;
-        moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x80034754u, sizeof(sint32))), v12);
-      }
-      v17 = *v14;
-      if ( *v14 == 3 )
-        break;
-      if ( v17 >= 4 )
-      {
-        v18 = a1;
-        if ( v17 == 4 )
-          *v14 = 3;
-        goto LABEL_29;
-      }
-      v18 = a1;
-      if ( v17 < 2 && v17 >= 0 )
-      {
-        v12 = (*(sint32 *)moh_draft_guest_pointer(0x80034768u, sizeof(sint32))) + v15;
-        moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x80034754u, sizeof(sint32))), (*(sint32 *)moh_draft_guest_pointer(0x80034768u, sizeof(sint32))) + v15);
-        moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x80034758u, sizeof(sint32))), v12);
-        v19 = -1;
-LABEL_28:
-        *v14 = v19;
-        v18 = a1;
-      }
-LABEL_29:
-      v20 = moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x8003473Cu, sizeof(sint32))), v18, v2);
-      result = sub_80024328(a1, v20);
-      if ( result < 0 )
-        return result;
-      v21 = (*(sint32 *)moh_draft_guest_pointer(0x1F801120u, 4u));
-      v22 = (*(sint32 *)moh_draft_guest_pointer(0x800347ACu, sizeof(sint32)));
-      *(uint32 *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x800347A8u, sizeof(sint32)))), 1u) = -129;
-      v23 = *(unsigned short *)moh_draft_guest_pointer((uint32)((v22 + 4)), 1u);
-      (*(sint32 *)moh_draft_guest_pointer(0x800D0A94u, 4u)) = 60;
-      (*(sint32 *)moh_draft_guest_pointer(0x800D0A90u, 4u)) = v21;
-      if ( (v23 & 0x80) != 0 )
-      {
-        while ( 1 )
-        {
-          v24 = sub_800251F8();
-          v25 = 0;
-          if ( v24 )
-            break;
-          if ( (*(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800347ACu, sizeof(sint32))) + 4)), 1u) & 0x80) == 0 )
-            goto LABEL_33;
-        }
-      }
-      else
-      {
-LABEL_33:
-        v25 = 1;
-        *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800347ACu, sizeof(sint32))) + 10)), 1u) |= 0x10u;
-      }
-      result = -3;
-      if ( !v25 )
-        return result;
-      if ( --(*(sint32 *)moh_draft_guest_pointer(0x800347B0u, sizeof(sint32))) < 2 )
-        goto LABEL_36;
-    }
-    moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x80034754u, sizeof(sint32))), v12 - 240);
-    v19 = 1;
-    goto LABEL_28;
-  }
-  v4 = -240;
-  while ( 1 )
-  {
-    if ( --(*(sint32 *)moh_draft_guest_pointer(0x800347B0u, sizeof(sint32))) <= 0 )
-      goto LABEL_15;
-    if ( v3 >= 0 )
-      moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x80034740u, sizeof(sint32))), *(uint32 *)moh_draft_guest_pointer((uint32)((a1 + 12)), 1u) + v4);
-    v5 = moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x8003473Cu, sizeof(sint32))), a1, 1);
-    result = sub_8002454C(a1, v5);
-    if ( result < 0 )
-      return result;
-    v7 = (*(sint32 *)moh_draft_guest_pointer(0x1F801120u, 4u));
-    v8 = (*(sint32 *)moh_draft_guest_pointer(0x800347ACu, sizeof(sint32)));
-    *(uint32 *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x800347A8u, sizeof(sint32)))), 1u) = -129;
-    v9 = *(unsigned short *)moh_draft_guest_pointer((uint32)((v8 + 4)), 1u);
-    (*(sint32 *)moh_draft_guest_pointer(0x800D0A94u, 4u)) = 60;
-    (*(sint32 *)moh_draft_guest_pointer(0x800D0A90u, 4u)) = v7;
-    if ( (v9 & 0x80) != 0 )
-    {
-      while ( 1 )
-      {
-        v10 = sub_800251F8();
-        v11 = 0;
-        if ( v10 )
-          break;
-        if ( (*(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800347ACu, sizeof(sint32))) + 4)), 1u) & 0x80) == 0 )
-          goto LABEL_12;
-      }
-    }
-    else
-    {
-LABEL_12:
-      v11 = 1;
-      *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800347ACu, sizeof(sint32))) + 10)), 1u) |= 0x10u;
-    }
-    ++v3;
-    if ( !v11 )
-      return -3;
-    v4 += 240;
-    if ( v3 >= 4 )
-      goto LABEL_15;
-  }
 }
 
 /* Unverified draft from full original pseudocode */
-uint32 sub_80027584(uint32 a1, uint32 a2, uint32 a3, uint32 a4)
+static uint32 moh_pad_wait_ack(uint32 port)
 {
-    /* TODO Memory adapter lifetime, pointer widths and unresolved volatile carriers */
-    unsigned char *p_a2 = (unsigned char *)moh_draft_guest_pointer(a2, 1u);
-
-  sint32 v8; 
-  sint32 result; 
-  sint32 v10; 
-  sint32 v11; 
-  char *v12; 
-  sint32 *v13; 
-  sint32 v14; 
-  char *v15; 
-  unsigned char *v16; 
-  sint32 v17; 
-  sint32 v18; 
-  sint32 v19; 
-  char v24; 
-  sint32 v25; 
-  char v26; 
-  sint32 v27; 
-  sint32 v28; 
-  sint32 v29; 
-  sint32 v30; 
-  char v31; 
-
-  if ( (*(sint32 *)moh_draft_guest_pointer(0x8003504Cu, sizeof(sint32))) >= 2 )
-    moh_draft_missing_call(0x80015B28u, (sint32)0x80015214u, (sint32)((uint32 *)moh_draft_guest_pointer(0x80035068u, 1u))[a1]);
-  v8 = a1;
-  if ( !((sint32 *)moh_draft_guest_pointer(0x80035288u, 1u))[v8] || p_a2 )
-  {
-    sub_8002703C(0, 0);
-    v10 = a1;
-    if ( a1 == 2 )
+    uint32 timer = r_u16(0x1F801120u);
+    uint32 irq = r_u32(0x800347A8u), status;
+    if (!port) port = r_u32(0x800347ACu);
+    w_u32(irq, 0xFFFFFF7Fu);
+    status = r_u16(port + 4u);
+    w_u32(0x800D0A94u, 60u);
+    w_u32(0x800D0A90u, timer);
+    while (status & 128u)
     {
-      v11 = 0;
-      v12 = p_a2;
-      do
-      {
-        ((unsigned char *)moh_draft_guest_pointer(0x8003505Cu, 1u))[v11++] = *v12;
-        v12 = &p_a2[v11];
-      }
-      while ( v11 < 4 );
-      v10 = a1;
+        if (sub_800251F8()) return 0u;
+        status = r_u16(r_u32(0x800347ACu) + 4u);
     }
-    if ( v10 == 14 )
-      (*(unsigned char *)moh_draft_guest_pointer(0x80035060u, sizeof(unsigned char))) = *p_a2;
-    (*(unsigned char *)moh_draft_guest_pointer(0x80035320u, sizeof(unsigned char))) = 0;
-    if ( ((sint32 *)moh_draft_guest_pointer(0x80035188u, 1u))[v10] )
-      (*(unsigned char *)moh_draft_guest_pointer(0x80035321u, sizeof(unsigned char))) = 0;
-    *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035308u, sizeof(sint32)))), 1u) = 0;
-    v13 = (sint32 *)moh_draft_guest_pointer(r_u32(0x80035288u + 4u * (uint32)v10), sizeof(sint32));
-    v14 = 0;
-    if ( *v13 > 0 )
+    port = r_u32(0x800347ACu);
+    w_u16(port + 10u, r_u16(port + 10u) | 16u);
+    return 1u;
+}
+
+uint32 sub_80025528(uint32 owner)
+{
+    uint32 mode, left, response, result, port, buffer, index;
+    uint32 offset = 0xFFFFFF10u, peer, peer_offset, pending, count, record = 0u;
+    sint32 child = -1;
+    if (r_u32(0x800347B8u)) moh_draft_indirect_call(r_u32(0x80034740u), owner);
+    mode = r_u32(0x800347B8u);
+    if (mode)
     {
-      v15 = p_a2;
-      do
-      {
-        *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035318u, sizeof(sint32)))), 1u) = *v15;
-        v15 = &p_a2[++v14];
-      }
-      while ( v14 < *v13 );
-    }
-    (*(unsigned char *)moh_draft_guest_pointer(0x80035061u, sizeof(unsigned char))) = a1;
-    *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035314u, sizeof(sint32)))), 1u) = a1;
-    result = 0;
-    if ( !a4 )
-    {
-      (*(sint32 *)moh_draft_guest_pointer(0x800D0D3Cu, 4u)) = moh_draft_missing_call(0x80015DB8u, -1) + 960;
-      (*(sint32 *)moh_draft_guest_pointer(0x800D0D40u, 4u)) = 0;
-      (*(sint32 *)moh_draft_guest_pointer(0x800D0D44u, 4u)) = 0x8001522Cu;
-      v16 = (unsigned char *)moh_draft_guest_pointer((uint32)(a3), 1u);
-      if ( (*(unsigned char *)moh_draft_guest_pointer(0x80035320u, sizeof(unsigned char))) )
-      {
-LABEL_37:
-        v29 = -2146628316;
-        v30 = 7;
-        if ( v16 )
+        for (;;)
         {
-          do
-          {
-            v31 = *(unsigned char *)moh_draft_guest_pointer((uint32)(v29++), 1u);
-            --v30;
-            *v16++ = v31;
-          }
-          while ( v30 != -1 );
-        }
-        result = 0;
-        if ( (*(unsigned char *)moh_draft_guest_pointer(0x80035320u, sizeof(unsigned char))) == 5 )
-          return -1;
-      }
-      else
-      {
-        while ( 1 )
-        {
-          if ( (*(sint32 *)moh_draft_guest_pointer(0x800D0D3Cu, 4u)) >= (sint32)moh_draft_missing_call(0x80015DB8u, -1)
-            && (v17 = (*(sint32 *)moh_draft_guest_pointer(0x800D0D40u, 4u)), ++(*(sint32 *)moh_draft_guest_pointer(0x800D0D40u, 4u)), v17 <= 3932160) )
-          {
-            v18 = 0;
-          }
-          else
-          {
-            moh_draft_missing_call(0x800224B0u, 0x80015178u);
-            moh_draft_missing_call(0x80015B28u, (sint32)0x80015188u, (*(sint32 *)moh_draft_guest_pointer(0x800D0D44u, 4u)), (sint32)((uint32 *)moh_draft_guest_pointer(0x80035068u, 1u))[(unsigned char)(*(unsigned char *)moh_draft_guest_pointer(0x80035061u, sizeof(unsigned char)))], (sint32)((uint32 *)moh_draft_guest_pointer(0x800350E8u, 1u))[(unsigned char)(*(unsigned char *)moh_draft_guest_pointer(0x80035320u, sizeof(unsigned char)))], (sint32)((uint32 *)moh_draft_guest_pointer(0x800350E8u, 1u))[(unsigned char)(*(unsigned char *)moh_draft_guest_pointer(0x80035321u, sizeof(unsigned char)))]);
-            sub_80027A18();
-            v18 = -1;
-          }
-          v19 = v18 != 0;
-          result = -1;
-          if ( v19 )
-            break;
-          if ( sub_8001CB9C() )
-          {
-            v24 = *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035308u, sizeof(sint32)))), 1u) & 3;
-            while ( 1 )
+            left = r_u32(0x800347B0u) - 1u;
+            w_u32(0x800347B0u, left);
+            if ((sint32)left <= 0) break;
+            if (child >= 0)
             {
-              v25 = sub_80026AD8();
-              v26 = v25;
-              v19 = v25 == 0;
-              v27 = v25 & 4;
-              if ( v19 )
-                break;
-              v19 = v27 == 0;
-              v28 = v26 & 2;
-              if ( !v19 )
-              {
-                if ( (*(sint32 *)moh_draft_guest_pointer(0x80035048u, sizeof(sint32))) )
-                  moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x80035048u, sizeof(sint32))), (unsigned char)(*(unsigned char *)moh_draft_guest_pointer(0x80035321u, sizeof(unsigned char))), -2146628308);
-                v28 = v26 & 2;
-              }
-              if ( v28 && (*(sint32 *)moh_draft_guest_pointer(0x80035044u, sizeof(sint32))) )
-                moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x80035044u, sizeof(sint32))), (unsigned char)(*(unsigned char *)moh_draft_guest_pointer(0x80035320u, sizeof(unsigned char))), -2146628316);
+                buffer = r_u32(owner + 12u);
+                moh_draft_indirect_call(r_u32(0x80034740u), buffer + offset);
             }
-            *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035308u, sizeof(sint32)))), 1u) = v24;
-          }
-          v16 = (unsigned char *)moh_draft_guest_pointer((uint32)(a3), 1u);
-          if ( (*(unsigned char *)moh_draft_guest_pointer(0x80035320u, sizeof(unsigned char))) )
-            goto LABEL_37;
+            response = moh_draft_indirect_call(r_u32(0x8003473Cu), owner, 1u) & 255u;
+            result = sub_8002454C(owner, response);
+            if ((sint32)result < 0) return result;
+            if (!moh_pad_wait_ack(0u)) return 0xFFFFFFFDu;
+            ++child;
+            offset += 240u;
+            if (child >= 4) break;
         }
-      }
     }
-  }
-  else
-  {
-    result = -2;
-    if ( (*(sint32 *)moh_draft_guest_pointer(0x8003504Cu, sizeof(sint32))) > 0 )
+    peer = r_u32(0x80034774u) == 0u;
+    left = r_u32(0x800347B0u);
+    if ((sint32)left >= 2)
     {
-      moh_draft_missing_call(0x80015B28u, (sint32)0x8001521Cu, (sint32)((uint32 *)moh_draft_guest_pointer(0x80035068u, 1u))[v8]);
-      return -2;
+        pending = 0x8003478Cu + 4u * peer;
+        peer_offset = 240u * peer;
+        for (;;)
+        {
+            count = r_u32(pending);
+            if ((sint32)count < 0) break;
+            if ((sint32)count > 0)
+            {
+                buffer = r_u32(r_u32(0x80034768u) + peer_offset + 12u);
+                record = buffer + 240u * count - 240u;
+                moh_draft_indirect_call(r_u32(0x80034754u), record);
+            }
+            count = r_u32(pending);
+            if (count == 3u)
+            {
+                moh_draft_indirect_call(r_u32(0x80034754u), record - 240u);
+                w_u32(pending, 1u);
+            }
+            else if (count == 4u) w_u32(pending, 3u);
+            else if ((sint32)count >= 0 && (sint32)count < 2)
+            {
+                record = r_u32(0x80034768u) + peer_offset;
+                moh_draft_indirect_call(r_u32(0x80034754u), record);
+                moh_draft_indirect_call(r_u32(0x80034758u), record);
+                w_u32(pending, 0xFFFFFFFFu);
+            }
+            response = moh_draft_indirect_call(r_u32(0x8003473Cu), owner, mode) & 255u;
+            result = sub_80024328(owner, response);
+            if ((sint32)result < 0) return result;
+            if (!moh_pad_wait_ack(0u)) return 0xFFFFFFFDu;
+            left = r_u32(0x800347B0u) - 1u;
+            w_u32(0x800347B0u, left);
+            if ((sint32)left < 2) break;
+        }
     }
-  }
-  return result;
+    left = r_u32(0x800347B0u) - 1u;
+    w_u32(0x800347B0u, left);
+    while ((sint32)left > 0)
+    {
+        response = moh_draft_indirect_call(r_u32(0x8003473Cu), owner, mode) & 255u;
+        result = sub_80024328(owner, response);
+        if ((sint32)result < 0) return result;
+        port = r_u32(0x800347ACu);
+        if (r_u16(port + 14u) != 34u && !moh_pad_wait_ack(port)) return 0xFFFFFFFDu;
+        left = r_u32(0x800347B0u) - 1u;
+        w_u32(0x800347B0u, left);
+    }
+    port = r_u32(0x800347ACu);
+    while (!(r_u16(port + 4u) & 2u)) {}
+    index = r_u8(owner + 68u);
+    w_u8(owner + 68u, index + 1u);
+    port = r_u32(0x800347ACu);
+    buffer = r_u32(owner + 60u);
+    response = r_u8(port);
+    w_u8(buffer + index, response);
+    moh_draft_indirect_call(r_u32(0x80034734u), 0u);
+    return 0u;
+}
+
+/* Unverified draft from full original pseudocode */
+uint32 sub_80027584(uint32 command, uint32 parameters, uint32 result_buffer, uint32 asynchronous)
+{
+    uint32 index, parameter_count, port, value, status;
+    command &= 255u;
+    if (r_s32(0x8003504Cu) >= 2)
+        moh_draft_missing_call(0x80015B28u, 0x80015214u, r_u32(0x80035068u + 4u * command));
+    if (r_u32(0x80035288u + 4u * command) && !parameters)
+    {
+        if (r_s32(0x8003504Cu) > 0)
+            moh_draft_missing_call(0x80015B28u, 0x8001521Cu, r_u32(0x80035068u + 4u * command));
+        return 0xFFFFFFFEu;
+    }
+    sub_8002703C(0u, 0u);
+    if (command == 2u)
+        for (index = 0u; index < 4u; ++index)
+            w_u8(0x8003505Cu + index, r_u8(parameters + index));
+    if (command == 14u) w_u8(0x80035060u, r_u8(parameters));
+    w_u8(0x80035320u, 0u);
+    if (r_u32(0x80035188u + 4u * command)) w_u8(0x80035321u, 0u);
+    w_u8(r_u32(0x80035308u), 0u);
+    parameter_count = 0x80035288u + 4u * command;
+    index = 0u;
+    if (r_s32(parameter_count) > 0)
+    {
+        do
+        {
+            port = r_u32(0x80035318u);
+            value = r_u8(parameters + index);
+            w_u8(port, value);
+            value = r_u32(parameter_count);
+            ++index;
+        } while ((sint32)index < (sint32)value);
+    }
+    port = r_u32(0x80035314u);
+    w_u8(0x80035061u, command);
+    w_u8(port, command);
+    if (asynchronous) return 0u;
+    w_u32(0x800D0D3Cu, moh_draft_missing_call(0x80015DB8u, 0xFFFFFFFFu) + 960u);
+    w_u32(0x800D0D40u, 0u);
+    status = r_u8(0x80035320u);
+    w_u32(0x800D0D44u, 0x8001522Cu);
+    while (!status)
+    {
+        if (moh_draft_cd_timeout()) return 0xFFFFFFFFu;
+        moh_draft_cd_dispatch(0x80027880u);
+        status = r_u8(0x80035320u);
+    }
+    if (result_buffer)
+        for (index = 0u; index < 8u; ++index)
+            w_u8(result_buffer + index, r_u8(0x800D0D24u + index));
+    return r_u8(0x80035320u) == 5u ? 0xFFFFFFFFu : 0u;
 }
 
 /* Unverified draft from full original pseudocode */
 uint32 sub_8002307C(void)
 {
-    /* TODO Memory adapter lifetime, pointer widths and unresolved volatile carriers */
-
-
-  sint32 v0; 
-  sint32 result; 
-  sint32 v2; 
-  char v3; 
-  char v4[8]; 
-
-  v0 = (*(sint32 *)moh_draft_guest_pointer(0x80034618u, sizeof(sint32))) - 1;
-  if ( (*(sint32 *)moh_draft_guest_pointer(0x80034618u, sizeof(sint32))) > 0 )
-  {
-    --(*(sint32 *)moh_draft_guest_pointer(0x80034618u, sizeof(sint32)));
-    if ( !v0 )
-      return moh_draft_missing_call(0x8002334Cu);
-  }
-  if ( (*(sint32 *)moh_draft_guest_pointer(0x80034614u, sizeof(sint32))) > 0 )
-    --(*(sint32 *)moh_draft_guest_pointer(0x80034614u, sizeof(sint32)));
-  if ( (*(sint32 *)moh_draft_guest_pointer(0x80034620u, sizeof(sint32))) > 0 )
-    --(*(sint32 *)moh_draft_guest_pointer(0x80034620u, sizeof(sint32)));
-  if ( ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] == 1 || ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] != 2 || (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) == 11 )
-    goto LABEL_45;
-  if ( (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) == 12 )
-  {
-    if ( (*(sint32 *)moh_draft_guest_pointer(0x80034728u, sizeof(sint32))) )
+    uint32 timeout = r_u32(0x80034618u), count, state, phase, command;
+    uint8 parameters[8];
+    if ((sint32)timeout > 0)
     {
-      v4[0] = 0;
-      if ( (*(sint32 *)moh_draft_guest_pointer(0x80034618u, sizeof(sint32))) <= 0 )
-      {
-        (*(sint32 *)moh_draft_guest_pointer(0x800345F0u, sizeof(sint32))) = 32;
-        sub_80022EA4(14, (sint32)v4);
-      }
-      (*(sint32 *)moh_draft_guest_pointer(0x80034728u, sizeof(sint32))) = 0;
+        --timeout;
+        w_u32(0x80034618u, timeout);
+        if (!timeout) return moh_draft_missing_call(0x8002334Cu);
     }
-    else
+    count = r_u32(0x80034614u);
+    if ((sint32)count > 0) w_u32(0x80034614u, count - 1u);
+    count = r_u32(0x80034620u);
+    if ((sint32)count > 0) w_u32(0x80034620u, count - 1u);
+    state = r_u32(0x800345F4u);
+    if (state != 2u) goto dispatch_callback;
+    phase = r_u32(0x800345F8u);
+    if (phase == 11u) goto dispatch_callback;
+    if (phase == 12u)
     {
-      if ( (*(sint32 *)moh_draft_guest_pointer(0x80034618u, sizeof(sint32))) <= 0 )
-      {
-        (*(sint32 *)moh_draft_guest_pointer(0x800345F0u, sizeof(sint32))) = 32;
-        sub_80022EA4(1, 0);
-      }
-      (*(sint32 *)moh_draft_guest_pointer(0x80034728u, sizeof(sint32))) = 1;
-    }
-    goto LABEL_45;
-  }
-  if ( (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) == 13 )
-  {
-    v2 = (*(sint32 *)moh_draft_guest_pointer(0x80034618u, sizeof(sint32)));
-    (*(sint32 *)moh_draft_guest_pointer(0x80034728u, sizeof(sint32))) = 0;
-    goto LABEL_42;
-  }
-  if ( (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) != 14 )
-  {
-    switch ( (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) )
-    {
-      case 15:
-        if ( (*(sint32 *)moh_draft_guest_pointer(0x80034614u, sizeof(sint32))) )
-          goto LABEL_45;
-        ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] = 1;
-        goto LABEL_40;
-      case 16:
-        if ( (unsigned char)(*(sint32 *)moh_draft_guest_pointer(0x80034608u, sizeof(sint32))) )
+        if (r_u32(0x80034728u))
         {
-          ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] = 1;
-LABEL_40:
-          (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) = 11;
-          goto LABEL_45;
-        }
-        break;
-      case 17:
-        if ( MOH_BYTE2((*(sint32 *)moh_draft_guest_pointer(0x80034608u, sizeof(sint32)))) )
-        {
-          ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] = 1;
-          goto LABEL_40;
-        }
-        break;
-      default:
-        goto LABEL_45;
-    }
-LABEL_41:
-    v2 = (*(sint32 *)moh_draft_guest_pointer(0x80034618u, sizeof(sint32)));
-LABEL_42:
-    if ( v2 > 0 )
-      goto LABEL_45;
-    goto LABEL_43;
-  }
-  switch ( (*(sint32 *)moh_draft_guest_pointer(0x800345FCu, sizeof(sint32))) )
-  {
-    case 21:
-      goto LABEL_41;
-    case 22:
-      ++(*(sint32 *)moh_draft_guest_pointer(0x8003460Cu, sizeof(sint32)));
-      if ( (*(sint32 *)moh_draft_guest_pointer(0x80034618u, sizeof(sint32))) > 0 )
-        break;
-LABEL_43:
-      (*(sint32 *)moh_draft_guest_pointer(0x800345F0u, sizeof(sint32))) = 32;
-      v3 = 1;
-LABEL_44:
-      sub_80022EA4(v3, 0);
-      break;
-    case 23:
-      if ( (*(sint32 *)moh_draft_guest_pointer(0x80034618u, sizeof(sint32))) > 0 )
-        break;
-      (*(sint32 *)moh_draft_guest_pointer(0x800345F0u, sizeof(sint32))) = 32;
-      v3 = 19;
-      goto LABEL_44;
-    case 24:
-      goto LABEL_41;
-  }
-LABEL_45:
-  if ( (*(sint32 *)moh_draft_guest_pointer(0x800D0A70u, 4u)) && (*(sint32 *)moh_draft_guest_pointer(0x800345D4u, sizeof(sint32))) )
-    moh_draft_indirect_call(r_u32(0x800D0A70u));
-  result = 3;
-  if ( ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] == 1 && (result = 3, !MOH_HIBYTE((*(sint32 *)moh_draft_guest_pointer(0x80034608u, sizeof(sint32))))) || ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] == 3 )
-  {
-    result = 33;
-    if ( (*(sint32 *)moh_draft_guest_pointer(0x80034618u, sizeof(sint32))) <= 0 )
-    {
-      (*(sint32 *)moh_draft_guest_pointer(0x800345F0u, sizeof(sint32))) = 33;
-      return sub_80022EA4(1, 0);
-    }
-  }
-  return result;
-}
-
-/* Unverified draft from full original pseudocode */
-uint32 sub_800236C8(uint32 a1, uint32 a2)
-{
-    /* TODO Memory adapter lifetime, pointer widths and unresolved volatile carriers */
-
-
-  sint32 v3; 
-  sint32 result; 
-
-  v3 = a1;
-  if ( (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) == 12 )
-  {
-    (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) = 13;
-    v3 = a1;
-  }
-  if ( v3 == 2 )
-  {
-    if ( (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) == 13 )
-    {
-      result = 14;
-      if ( ((*(unsigned char *)moh_draft_guest_pointer(0x800345ECu, sizeof(unsigned char))) & 0x10) == 0 )
-      {
-        (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) = 14;
-        ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] = 2;
-        (*(sint32 *)moh_draft_guest_pointer(0x800345FCu, sizeof(sint32))) = 21;
-        return ++(*(sint32 *)moh_draft_guest_pointer(0x80034610u, sizeof(sint32)));
-      }
-      return result;
-    }
-    if ( (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) == 14 )
-    {
-      if ( (*(sint32 *)moh_draft_guest_pointer(0x800345FCu, sizeof(sint32))) == 21 )
-      {
-        result = 22;
-        if ( ((*(unsigned char *)moh_draft_guest_pointer(0x800345ECu, sizeof(unsigned char))) & 0x10) == 0 )
-        {
-          ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] = 2;
-          (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) = 14;
-          (*(sint32 *)moh_draft_guest_pointer(0x800345FCu, sizeof(sint32))) = 22;
-          (*(sint32 *)moh_draft_guest_pointer(0x8003460Cu, sizeof(sint32))) = 0;
-        }
-        return result;
-      }
-      if ( (*(sint32 *)moh_draft_guest_pointer(0x800345FCu, sizeof(sint32))) == 22 )
-      {
-        result = 23;
-        if ( ((*(unsigned char *)moh_draft_guest_pointer(0x800345ECu, sizeof(unsigned char))) & 2) == 0 )
-        {
-          result = (*(sint32 *)moh_draft_guest_pointer(0x8003460Cu, sizeof(sint32))) < 301;
-          if ( (*(sint32 *)moh_draft_guest_pointer(0x8003460Cu, sizeof(sint32))) >= 301 )
-          {
-            result = 3;
-            ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] = 3;
-            if ( (*(sint32 *)moh_draft_guest_pointer(0x800D0A7Cu, 4u)) )
-              return moh_draft_indirect_call(r_u32(0x800D0A7Cu), 5, a2);
-          }
-          return result;
-        }
-LABEL_17:
-        ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] = 2;
-        (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) = 14;
-        (*(sint32 *)moh_draft_guest_pointer(0x800345FCu, sizeof(sint32))) = result;
-        return result;
-      }
-      result = 24;
-      if ( (*(sint32 *)moh_draft_guest_pointer(0x800345FCu, sizeof(sint32))) == 23 )
-        goto LABEL_17;
-      if ( (*(sint32 *)moh_draft_guest_pointer(0x800345FCu, sizeof(sint32))) == 24 )
-      {
-        result = (unsigned char)(*(unsigned char *)moh_draft_guest_pointer(0x800345ECu, sizeof(unsigned char)));
-        if ( (*(unsigned char *)moh_draft_guest_pointer(0x800345ECu, sizeof(unsigned char))) == 2 )
-        {
-          ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] = 1;
-          result = 11;
-          (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) = 11;
-          (*(sint32 *)moh_draft_guest_pointer(0x800345FCu, sizeof(sint32))) = 0;
-          if ( (*(sint32 *)moh_draft_guest_pointer(0x800D0A7Cu, 4u)) )
-            return moh_draft_indirect_call(r_u32(0x800D0A7Cu), 2, a2);
-        }
-      }
-    }
-    else
-    {
-      result = (uint32)((*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) - 16) < 2;
-      if ( (uint32)((*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) - 16) < 2 )
-      {
-        result = (*(sint32 *)moh_draft_guest_pointer(0x80034620u, sizeof(sint32)));
-        if ( !(*(sint32 *)moh_draft_guest_pointer(0x80034620u, sizeof(sint32))) )
-        {
-          result = (*(unsigned char *)moh_draft_guest_pointer(0x800345ECu, sizeof(unsigned char))) & 2;
-          if ( ((*(unsigned char *)moh_draft_guest_pointer(0x800345ECu, sizeof(unsigned char))) & 2) == 0 )
-          {
-            ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] = 1;
-            (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) = 11;
-            if ( (*(sint32 *)moh_draft_guest_pointer(0x800D0A78u, 4u)) && (*(sint32 *)moh_draft_guest_pointer(0x800345D4u, sizeof(sint32))) )
-              moh_draft_indirect_call(r_u32(0x800D0A78u), 5, a2);
-            result = (sint32)(*(sint32 *)moh_draft_guest_pointer(0x800D0A74u, 4u));
-            if ( (*(sint32 *)moh_draft_guest_pointer(0x800D0A74u, 4u)) )
+            timeout = r_u32(0x80034618u);
+            parameters[0] = 0u;
+            if ((sint32)timeout <= 0)
             {
-              result = (*(sint32 *)moh_draft_guest_pointer(0x800345D4u, sizeof(sint32)));
-              if ( (*(sint32 *)moh_draft_guest_pointer(0x800345D4u, sizeof(sint32))) )
-                return moh_draft_indirect_call(r_u32(0x800D0A74u), 5, a2);
+                w_u32(0x800345F0u, 32u);
+                /* TODO Bind the original addressable command parameter */
+                sub_80022EA4(14u, moh_draft_local_address(parameters, sizeof(parameters)));
             }
-          }
-        }
-      }
-    }
-  }
-  else
-  {
-    result = (*(unsigned char *)moh_draft_guest_pointer(0x800345ECu, sizeof(unsigned char))) & 0x10;
-    if ( ((*(unsigned char *)moh_draft_guest_pointer(0x800345ECu, sizeof(unsigned char))) & 0x10) != 0 )
-    {
-      ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] = 2;
-      (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) = 12;
-    }
-    else
-    {
-      result = 1;
-      if ( (uint32)((*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) - 16) < 2 )
-      {
-        ((sint32 *)moh_draft_guest_pointer(0x800345F4u, 1u))[0] = 1;
-        result = 11;
-        (*(sint32 *)moh_draft_guest_pointer(0x800345F8u, sizeof(sint32))) = 11;
-      }
-    }
-  }
-  return result;
-}
-
-/* Unverified draft from full original pseudocode */
-uint32 sub_80021444(uint32 a1, uint32 a2, uint32 a3)
-{
-    /* TODO Memory adapter lifetime, pointer widths and unresolved volatile carriers */
-
-
-  sint32 result; 
-  sint32 v4; 
-  uint32 v5; 
-  sint32 v6; 
-  uint32 v7; 
-  short v8; 
-  uint32 v9; 
-  sint32 v10; 
-
-  if ( a1 == 1 )
-  {
-    v4 = *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800302BCu, sizeof(sint32))) + 422)), 1u);
-    (*(sint32 *)moh_draft_guest_pointer(0x8003030Cu, sizeof(sint32))) = 0;
-    if ( v4 == (unsigned short)(*(short *)moh_draft_guest_pointer(0x800302D4u, sizeof(short))) )
-    {
-LABEL_13:
-      *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800302BCu, sizeof(sint32))) + 426)), 1u) = *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800302BCu, sizeof(sint32))) + 426)), 1u) & 0xFFCF | 0x20;
-      return 0;
-    }
-    else
-    {
-      v5 = 1;
-      while ( 1 )
-      {
-        result = -2;
-        if ( v5 >= 0xF01 )
-          break;
-        ++v5;
-        if ( *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800302BCu, sizeof(sint32))) + 422)), 1u) == (unsigned short)(*(short *)moh_draft_guest_pointer(0x800302D4u, sizeof(short))) )
-          goto LABEL_13;
-      }
-    }
-  }
-  else if ( a1 >= 2 )
-  {
-    if ( a1 == 2 )
-    {
-      (*(short *)moh_draft_guest_pointer(0x800302D4u, sizeof(short))) = a2 >> (*(sint32 *)moh_draft_guest_pointer(0x800302E4u, sizeof(sint32)));
-      *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800302BCu, sizeof(sint32))) + 422)), 1u) = (*(short *)moh_draft_guest_pointer(0x800302D4u, sizeof(short)));
-      return 0;
-    }
-    else
-    {
-      result = 0;
-      if ( a1 == 3 )
-      {
-        v8 = 32;
-        if ( (*(sint32 *)moh_draft_guest_pointer(0x8003030Cu, sizeof(sint32))) == 1 )
-          v8 = 48;
-        v9 = 1;
-        if ( (*(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800302BCu, sizeof(sint32))) + 426)), 1u) & 0x30) == v8 )
-        {
-LABEL_24:
-          if ( (*(sint32 *)moh_draft_guest_pointer(0x8003030Cu, sizeof(sint32))) == 1 )
-            moh_draft_missing_call(0x800218B0u);
-          else
-            sub_80021888();
-          (*(sint32 *)moh_draft_guest_pointer(0x80030310u, sizeof(sint32))) = a2;
-          (*(sint32 *)moh_draft_guest_pointer(0x80030314u, sizeof(sint32))) = (a3 >> 6) + ((a3 & 0x3F) != 0);
-          *(uint32 *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x800302C0u, sizeof(sint32)))), 1u) = a2;
-          *(uint32 *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x800302C4u, sizeof(sint32)))), 1u) = ((*(sint32 *)moh_draft_guest_pointer(0x80030314u, sizeof(sint32))) << 16) | 0x10;
-          v10 = 16777729;
-          if ( (*(sint32 *)moh_draft_guest_pointer(0x8003030Cu, sizeof(sint32))) == 1 )
-            v10 = 16777728;
-          *(uint32 *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x800302C8u, sizeof(sint32)))), 1u) = v10;
-          return 0;
+            w_u32(0x80034728u, 0u);
         }
         else
         {
-          while ( 1 )
-          {
-            result = -2;
-            if ( v9 >= 0xF01 )
-              break;
-            ++v9;
-            if ( (*(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800302BCu, sizeof(sint32))) + 426)), 1u) & 0x30) == v8 )
-              goto LABEL_24;
-          }
+            if (r_s32(0x80034618u) <= 0)
+            {
+                w_u32(0x800345F0u, 32u);
+                sub_80022EA4(1u, 0u);
+            }
+            w_u32(0x80034728u, 1u);
         }
-      }
+        goto dispatch_callback;
     }
-  }
-  else
-  {
-    result = 0;
-    if ( !a1 )
+    if (phase == 13u)
     {
-      v6 = *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800302BCu, sizeof(sint32))) + 422)), 1u);
-      (*(sint32 *)moh_draft_guest_pointer(0x8003030Cu, sizeof(sint32))) = 1;
-      if ( v6 == (unsigned short)(*(short *)moh_draft_guest_pointer(0x800302D4u, sizeof(short))) )
-      {
-LABEL_18:
-        *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800302BCu, sizeof(sint32))) + 426)), 1u) |= 0x30u;
-        return 0;
-      }
-      else
-      {
-        v7 = 1;
-        while ( 1 )
-        {
-          result = -2;
-          if ( v7 >= 0xF01 )
-            break;
-          ++v7;
-          if ( *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800302BCu, sizeof(sint32))) + 422)), 1u) == (unsigned short)(*(short *)moh_draft_guest_pointer(0x800302D4u, sizeof(short))) )
-            goto LABEL_18;
-        }
-      }
+        timeout = r_u32(0x80034618u);
+        w_u32(0x80034728u, 0u);
+        if ((sint32)timeout <= 0) goto send_status;
     }
-  }
-  return result;
+    else if (phase == 14u)
+    {
+        command = r_u32(0x800345FCu);
+        if (command == 22u)
+        {
+            count = r_u32(0x8003460Cu);
+            timeout = r_u32(0x80034618u);
+            w_u32(0x8003460Cu, count + 1u);
+            if ((sint32)timeout <= 0) goto send_status;
+        }
+        else if (command == 23u)
+        {
+            if (r_s32(0x80034618u) <= 0)
+            {
+                w_u32(0x800345F0u, 32u);
+                sub_80022EA4(19u, 0u);
+            }
+        }
+        else if (command == 21u || command == 24u)
+        {
+            if (r_s32(0x80034618u) <= 0) goto send_status;
+        }
+    }
+    else if (phase == 15u)
+    {
+        if (!r_u32(0x80034614u)) goto command_complete;
+    }
+    else if (phase == 16u || phase == 17u)
+    {
+        if (r_u8(phase == 16u ? 0x80034608u : 0x8003460Au)) goto command_complete;
+        if (r_s32(0x80034618u) <= 0) goto send_status;
+    }
+    goto dispatch_callback;
+command_complete:
+    w_u32(0x800345F4u, 1u);
+    w_u32(0x800345F8u, 11u);
+    goto dispatch_callback;
+send_status:
+    w_u32(0x800345F0u, 32u);
+    sub_80022EA4(1u, 0u);
+dispatch_callback:
+    if (r_u32(0x800D0A70u) && r_u32(0x800345D4u))
+        moh_draft_indirect_call(r_u32(0x800D0A70u));
+    state = r_u32(0x800345F4u);
+    if ((state == 1u && !r_u8(0x8003460Bu)) || state == 3u)
+    {
+        if (r_s32(0x80034618u) <= 0)
+        {
+            w_u32(0x800345F0u, 33u);
+            return sub_80022EA4(1u, 0u);
+        }
+        return 33u;
+    }
+    return 3u;
 }
 
 /* Unverified draft from full original pseudocode */
-uint32 sub_8001804C(uint32 a1, uint32 a2)
+uint32 sub_800236C8(uint32 event, uint32 result_buffer)
 {
-    /* TODO Memory adapter lifetime, pointer widths and unresolved volatile carriers */
-    unsigned short *p_a1 = (unsigned short *)moh_draft_guest_pointer(a1, 1u);
+    uint32 phase = r_u32(0x800345F8u), command, result, count, callback;
+    if (phase == 12u) w_u32(0x800345F8u, 13u);
+    if ((event & 255u) != 2u)
+    {
+        result = r_u8(0x800345ECu) & 16u;
+        if (result)
+        {
+            w_u32(0x800345F4u, 2u);
+            w_u32(0x800345F8u, 12u);
+        }
+        else
+        {
+            phase = r_u32(0x800345F8u);
+            result = 1u;
+            if (phase - 16u < 2u)
+            {
+                w_u32(0x800345F4u, 1u);
+                w_u32(0x800345F8u, 11u);
+                result = 11u;
+            }
+        }
+        return result;
+    }
+    phase = r_u32(0x800345F8u);
+    if (phase == 13u)
+    {
+        if (r_u8(0x800345ECu) & 16u) return 14u;
+        w_u32(0x800345F8u, 14u);
+        count = r_u32(0x80034610u);
+        w_u32(0x800345F4u, 2u);
+        w_u32(0x800345FCu, 21u);
+        w_u32(0x80034610u, count + 1u);
+        return count + 1u;
+    }
+    if (phase == 14u)
+    {
+        command = r_u32(0x800345FCu);
+        if (command == 21u)
+        {
+            if (!(r_u8(0x800345ECu) & 16u))
+            {
+                w_u32(0x800345F4u, 2u);
+                w_u32(0x800345F8u, 14u);
+                w_u32(0x800345FCu, 22u);
+                w_u32(0x8003460Cu, 0u);
+            }
+            return 22u;
+        }
+        if (command == 22u)
+        {
+            if (!(r_u8(0x800345ECu) & 2u))
+            {
+                if (r_s32(0x8003460Cu) < 301) return 1u;
+                callback = r_u32(0x800D0A7Cu);
+                w_u32(0x800345F4u, 3u);
+                if (callback) return moh_draft_indirect_call(r_u32(0x800D0A7Cu), 5u, result_buffer);
+                return 3u;
+            }
+            result = 23u;
+        }
+        else if (command == 23u) result = 24u;
+        else if (command == 24u)
+        {
+            result = r_u8(0x800345ECu);
+            if (result != 2u) return result;
+            callback = r_u32(0x800D0A7Cu);
+            w_u32(0x800345F4u, 1u);
+            w_u32(0x800345F8u, 11u);
+            w_u32(0x800345FCu, 0u);
+            if (callback) return moh_draft_indirect_call(r_u32(0x800D0A7Cu), 2u, result_buffer);
+            return 11u;
+        }
+        else return 24u;
+        w_u32(0x800345F4u, 2u);
+        w_u32(0x800345F8u, 14u);
+        w_u32(0x800345FCu, result);
+        return result;
+    }
+    if (phase - 16u >= 2u) return 0u;
+    result = r_u32(0x80034620u);
+    if (result) return result;
+    result = r_u8(0x800345ECu) & 2u;
+    if (result) return result;
+    callback = r_u32(0x800D0A78u);
+    w_u32(0x800345F4u, 1u);
+    w_u32(0x800345F8u, 11u);
+    if (callback && r_u32(0x800345D4u))
+        moh_draft_indirect_call(r_u32(0x800D0A78u), 5u, result_buffer);
+    result = r_u32(0x800D0A74u);
+    if (result)
+    {
+        result = r_u32(0x800345D4u);
+        if (result) return moh_draft_indirect_call(r_u32(0x800D0A74u), 5u, result_buffer);
+    }
+    return result;
+}
 
-  short v3; 
-  short v4; 
-  sint32 v5; 
-  short v6; 
-  sint32 v7; 
-  short v8; 
-  sint32 v9; 
-  sint32 v10; 
-  sint32 v11; 
-  sint32 v12; 
+/* Unverified draft from full original pseudocode */
+uint32 sub_80021444(uint32 mode, uint32 address, uint32 size)
+{
+    uint32 base, expected, actual, count;
+    if (mode == 2u)
+    {
+        uint32 shift = r_u32(0x800302E4u);
+        base = r_u32(0x800302BCu);
+        actual = address >> (shift & 31u);
+        w_u16(0x800302D4u, actual);
+        w_u16(base + 422u, actual);
+        return 0u;
+    }
+    if (mode == 0u || mode == 1u)
+    {
+        base = r_u32(0x800302BCu);
+        expected = r_u16(0x800302D4u);
+        actual = r_u16(base + 422u);
+        w_u32(0x8003030Cu, mode == 0u);
+        for (count = 1u; actual != expected; ++count)
+        {
+            if (count >= 0xF01u) return 0xFFFFFFFEu;
+            actual = r_u16(base + 422u);
+        }
+        base = r_u32(0x800302BCu);
+        actual = r_u16(base + 426u);
+        w_u16(base + 426u, mode ? ((actual & 0xFFCFu) | 0x20u) : (actual | 0x30u));
+        return 0u;
+    }
+    if (mode != 3u) return 0u;
+    expected = r_u32(0x8003030Cu) == 1u ? 0x30u : 0x20u;
+    base = r_u32(0x800302BCu);
+    actual = r_u16(base + 426u) & 0x30u;
+    for (count = 1u; actual != expected; ++count)
+    {
+        if (count >= 0xF01u) return 0xFFFFFFFEu;
+        actual = r_u16(base + 426u) & 0x30u;
+    }
+    if (r_u32(0x8003030Cu) == 1u)
+        moh_draft_missing_call(0x800218B0u);
+    else
+        sub_80021888();
+    w_u32(0x80030310u, address);
+    base = r_u32(0x800302C0u);
+    address = r_u32(0x80030310u);
+    count = (size >> 6) + ((size & 0x3Fu) != 0u);
+    w_u32(0x80030314u, count);
+    w_u32(base, address);
+    count = r_u32(0x80030314u);
+    base = r_u32(0x800302C4u);
+    w_u32(base, (count << 16) | 0x10u);
+    expected = r_u32(0x8003030Cu) == 1u ? 0x01000200u : 0x01000201u;
+    base = r_u32(0x800302C8u);
+    w_u32(base, expected);
+    return 0u;
+}
 
-  v3 = p_a1[2];
-  if ( v3 < 0 )
-  {
-    v4 = 0;
-  }
-  else
-  {
-    v4 = (*(short *)moh_draft_guest_pointer(0x8002DF1Cu, sizeof(short))) - 1;
-    if ( (*(short *)moh_draft_guest_pointer(0x8002DF1Cu, sizeof(short))) - 1 >= v3 )
-      v4 = v3;
-  }
-  v5 = (short)p_a1[3];
-  v6 = p_a1[3];
-  p_a1[2] = v4;
-  if ( v5 < 0 )
-  {
-    v8 = 0;
-  }
-  else
-  {
-    v7 = (*(short *)moh_draft_guest_pointer(0x8002DF1Eu, sizeof(short))) - 1 < v5;
-    v8 = (*(short *)moh_draft_guest_pointer(0x8002DF1Eu, sizeof(short))) - 1;
-    if ( !v7 )
-      v8 = v6;
-  }
-  v9 = *p_a1 & 0x3F;
-  p_a1[3] = v8;
-  if ( v9 || (p_a1[2] & 0x3F) != 0 )
-  {
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2B4u, 4u)) = 135045852;
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2C4u, 4u)) = -436207616;
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2B8u, 4u)) = -486539264;
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2BCu, 4u)) = -452984833;
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2C0u, 4u)) = -452984832;
-    v10 = *(uint32 *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x8002E020u, sizeof(sint32)))), 1u);
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2CCu, 4u)) = a2 & 0xFFFFFF | 0x60000000;
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2C8u, 4u)) = v10 & 0x7FF | (a2 >> 31 << 10) | 0xE1000000;
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2D0u, 4u)) = *(uint32 *)moh_draft_guest_pointer((uint32)(p_a1), 1u);
-    v11 = *((uint32 *)moh_draft_guest_pointer((uint32)(p_a1), 1u) + 1);
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2DCu, 4u)) = 0x3FFFFFF;
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2D4u, 4u)) = v11;
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2E0u, 4u)) = sub_800187DC(3) | 0xE3000000;
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2E4u, 4u)) = sub_800187DC(4) | 0xE4000000;
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2E8u, 4u)) = sub_800187DC(5) | 0xE5000000;
-  }
-  else
-  {
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2B4u, 4u)) = 100663295;
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2B8u, 4u)) = -436207616;
-    v12 = *(uint32 *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x8002E020u, sizeof(sint32)))), 1u);
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2C0u, 4u)) = a2 & 0xFFFFFF | 0x2000000;
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2BCu, 4u)) = v12 & 0x7FF | (a2 >> 31 << 10) | 0xE1000000;
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2C4u, 4u)) = *(uint32 *)moh_draft_guest_pointer((uint32)(p_a1), 1u);
-    (*(sint32 *)moh_draft_guest_pointer(0x800CA2C8u, 4u)) = *((uint32 *)moh_draft_guest_pointer((uint32)(p_a1), 1u) + 1);
-  }
-  sub_80018794(-2146655564);
-  return 0;
+/* Unverified draft from full original pseudocode */
+uint32 sub_8001804C(uint32 rectangle, uint32 color)
+{
+    sint32 width = r_s16(rectangle + 4u), height, limit;
+    uint32 width_word = r_u16(rectangle + 4u), height_word, clamped_width, clamped_height;
+    uint32 unaligned, status, port, extent;
+    clamped_width = 0u;
+    if (width >= 0)
+    {
+        limit = r_s16(0x8002DF1Cu) - 1;
+        clamped_width = r_u16(0x8002DF1Cu) - 1u;
+        if (limit >= width) clamped_width = width_word;
+    }
+    height = r_s16(rectangle + 6u);
+    height_word = r_u16(rectangle + 6u);
+    w_u16(rectangle + 4u, clamped_width);
+    clamped_height = 0u;
+    if (height >= 0)
+    {
+        limit = r_s16(0x8002DF1Eu) - 1;
+        clamped_height = r_u16(0x8002DF1Eu) - 1u;
+        if (limit >= height) clamped_height = height_word;
+    }
+    unaligned = r_u16(rectangle) & 63u;
+    w_u16(rectangle + 6u, clamped_height);
+    if (unaligned || (r_u16(rectangle + 4u) & 63u))
+    {
+        w_u32(0x800CA2B4u, 0x080CA2DCu);
+        w_u32(0x800CA2C4u, 0xE6000000u);
+        port = r_u32(0x8002E020u);
+        w_u32(0x800CA2B8u, 0xE3000000u);
+        w_u32(0x800CA2BCu, 0xE4FFFFFFu);
+        w_u32(0x800CA2C0u, 0xE5000000u);
+        status = r_u32(port);
+        w_u32(0x800CA2CCu, (color & 0xFFFFFFu) | 0x60000000u);
+        w_u32(0x800CA2C8u, (status & 0x7FFu) | ((color >> 31) << 10) | 0xE1000000u);
+        w_u32(0x800CA2D0u, r_u32(rectangle));
+        extent = r_u32(rectangle + 4u);
+        w_u32(0x800CA2DCu, 0x03FFFFFFu);
+        w_u32(0x800CA2D4u, extent);
+        w_u32(0x800CA2E0u, sub_800187DC(3u) | 0xE3000000u);
+        w_u32(0x800CA2E4u, sub_800187DC(4u) | 0xE4000000u);
+        w_u32(0x800CA2E8u, sub_800187DC(5u) | 0xE5000000u);
+    }
+    else
+    {
+        w_u32(0x800CA2B4u, 0x05FFFFFFu);
+        w_u32(0x800CA2B8u, 0xE6000000u);
+        status = r_u32(r_u32(0x8002E020u));
+        w_u32(0x800CA2C0u, (color & 0xFFFFFFu) | 0x02000000u);
+        w_u32(0x800CA2BCu, (status & 0x7FFu) | ((color >> 31) << 10) | 0xE1000000u);
+        w_u32(0x800CA2C4u, r_u32(rectangle));
+        w_u32(0x800CA2C8u, r_u32(rectangle + 4u));
+    }
+    sub_80018794(0x800CA2B4u);
+    return 0u;
 }
 
 /* Unverified draft from full original pseudocode */
 uint32 sub_8001CC9C(void)
 {
     uint32 pending, index, callback, timeout;
-    uint32 status = r_u32(0x8002F25Cu);
-    uint32 mask = r_u32(0x8002F260u);
+    uint32 status, mask, enabled, status_bits, mask_bits;
     if (!r_u16(0x8002E1D0u))
     {
+        status = r_u32(0x8002F25Cu);
         moh_draft_missing_call(0x80015B28u, 0x80014B20u, (uint32)r_u16(status));
         return moh_native_irq_return();
     }
+    status = r_u32(0x8002F25Cu);
+    enabled = r_u16(0x8002E200u);
     w_u16(0x8002E1D2u, 1u);
-    while ((pending = r_u16(mask) & r_u16(0x8002E200u) & r_u16(status)) != 0u)
+    mask = r_u32(0x8002F260u);
+    status_bits = r_u16(status);
+    mask_bits = r_u16(mask);
+    pending = status_bits & enabled & mask_bits;
+    while (pending)
     {
         for (index = 0u; index < 11u && (pending & 0xFFFFu); ++index, pending >>= 1)
         {
             if (!(pending & 1u)) continue;
+            status = r_u32(0x8002F25Cu);
             w_u16(status, ~(1u << index));
             callback = r_u32(0x8002E1D4u + 4u * index);
             if (callback) moh_draft_indirect_call(callback);
         }
+        status = r_u32(0x8002F25Cu);
+        enabled = r_u16(0x8002E200u);
+        mask = r_u32(0x8002F260u);
+        status_bits = r_u16(status);
+        mask_bits = r_u16(mask);
+        pending = status_bits & enabled & mask_bits;
     }
-    if (r_u16(status) & r_u16(mask))
+    status = r_u32(0x8002F25Cu);
+    mask = r_u32(0x8002F260u);
+    status_bits = r_u16(status);
+    mask_bits = r_u16(mask);
+    if (status_bits & mask_bits)
     {
         timeout = r_u32(0x8002F268u);
         w_u32(0x8002F268u, timeout + 1u);
         if ((sint32)timeout >= 2049)
         {
+            status_bits = r_u16(status);
+            mask_bits = r_u16(mask);
             moh_draft_missing_call(0x80015B28u, 0x80014B3Cu,
-                (uint32)r_u16(status), (uint32)r_u16(mask));
+                status_bits, mask_bits);
+            status = r_u32(0x8002F25Cu);
             w_u32(0x8002F268u, 0u);
             w_u16(status, 0u);
         }
@@ -1109,147 +634,121 @@ uint32 sub_8001CC9C(void)
 }
 
 /* Unverified draft from full original pseudocode */
-uint32 sub_80037A0C(uint32 a1, uint32 a2, uint32 a3)
+uint32 sub_80037A0C(uint32 first_sector, uint32 sector_count, uint32 filename)
 {
-    /* TODO Memory adapter lifetime, pointer widths and unresolved volatile carriers */
-    sint32 *p_a1 = (sint32 *)moh_draft_guest_pointer(a1, 1u);
-    sint32 *p_a2 = (sint32 *)moh_draft_guest_pointer(a2, 1u);
-    unsigned char *p_a3 = (unsigned char *)moh_draft_guest_pointer(a3, 1u);
-
-  sint32 v5; 
-  sint32 v6; 
-  sint32 v7; 
-  sint32 v8; 
-  uint32 v9; 
-  sint32 v10; 
-  sint32 i; 
-  char *v12; 
-  uint32 result; 
-  char v14[16]; 
-
-  v5 = 0;
-  if ( *p_a2 <= 0 )
-    return 0;
-  while ( 1 )
-  {
-    sub_80037370(1, *p_a1 + v5, -2147254896);
-    v6 = 0;
-    if ( ((unsigned char *)moh_draft_guest_pointer(0x80037D90u, 1u))[0] )
-      break;
-LABEL_9:
-    if ( ++v5 >= *p_a2 )
-      return 0;
-  }
-  v7 = 33;
-  while ( 1 )
-  {
-    v8 = (unsigned char)((unsigned char *)moh_draft_guest_pointer(0x80037D90u, 1u))[v6 + 2]
-       + ((unsigned char)((unsigned char *)moh_draft_guest_pointer(0x80037D90u, 1u))[v6 + 3] << 8)
-       + ((unsigned char)((unsigned char *)moh_draft_guest_pointer(0x80037D90u, 1u))[v6 + 4] << 16)
-       + ((unsigned char)((unsigned char *)moh_draft_guest_pointer(0x80037D90u, 1u))[v6 + 5] << 24);
-    v9 = (unsigned char)((unsigned char *)moh_draft_guest_pointer(0x80037D90u, 1u))[v6 + 10]
-       + ((unsigned char)((unsigned char *)moh_draft_guest_pointer(0x80037D90u, 1u))[v6 + 11] << 8)
-       + ((unsigned char)((unsigned char *)moh_draft_guest_pointer(0x80037D90u, 1u))[v6 + 12] << 16)
-       + ((unsigned char)((unsigned char *)moh_draft_guest_pointer(0x80037D90u, 1u))[v6 + 13] << 24);
-    v10 = v6 + (unsigned char)((unsigned char *)moh_draft_guest_pointer(0x80037D90u, 1u))[v6 + 32] + 32;
-    for ( i = 0; v10 >= v7; ++i )
+    uint32 sector_index = 0u, offset, entry, extent, bytes, limit, cursor, count;
+    uint32 byte2, byte3, byte4, byte5, byte10, byte11, byte12, byte13;
+    char name[256];
+    if ((sint32)r_u32(sector_count) <= 0) return 0u;
+    do
     {
-      v12 = (unsigned char *)moh_draft_guest_pointer(0x80037D90u + (uint32)v7++, 1u);
-      v14[i] = *v12;
+        sub_80037370(1u, r_u32(first_sector) + sector_index, 0x80037D90u);
+        offset = 0u;
+        if (r_u8(0x80037D90u))
+        {
+            do
+            {
+                entry = 0x80037D90u + offset;
+                byte2 = r_u8(entry + 2u);
+                byte3 = r_u8(entry + 3u);
+                byte10 = r_u8(entry + 10u);
+                byte4 = r_u8(entry + 4u);
+                byte5 = r_u8(entry + 5u);
+                byte11 = r_u8(entry + 11u);
+                extent = byte2 + (byte3 << 8) + (byte4 << 16) + (byte5 << 24);
+                byte12 = r_u8(entry + 12u);
+                byte13 = r_u8(entry + 13u);
+                limit = offset + r_u8(entry + 32u) + 32u;
+                bytes = byte10 + (byte11 << 8) + (byte12 << 16) + (byte13 << 24);
+                count = 0u;
+                for (cursor = offset + 33u; (sint32)cursor <= (sint32)limit; ++cursor)
+                    name[count++] = (char)r_u8(0x80037D90u + cursor);
+                name[count] = 0;
+                /* TODO Bind the addressable local string through the native adapter */
+                if (!moh_draft_missing_call(0x8001ACC8u, moh_draft_local_address(name, sizeof(name)), filename))
+                {
+                    w_u32(first_sector, extent);
+                    w_u32(sector_count, bytes >> 11);
+                    return bytes;
+                }
+                offset += r_u8(entry);
+            } while (r_u8(0x80037D90u + offset));
+        }
+        ++sector_index;
+    } while ((sint32)sector_index < (sint32)r_u32(sector_count));
+    return 0u;
+}
+
+/* Unverified draft from full original pseudocode */
+uint32 sub_80016EA0(uint32 label, uint32 rectangle)
+{
+    uint32 level = r_u8(0x8002DF1Au), format;
+    sint32 x, y, width, height, limit;
+    if (level == 1u)
+    {
+        width = (sint16)r_u16(rectangle + 4u);
+        limit = (sint16)r_u16(0x8002DF1Cu);
+        if (limit < width) goto bad_rectangle;
+        x = (sint16)r_u16(rectangle);
+        if (limit < width + x) goto bad_rectangle;
+        y = (sint16)r_u16(rectangle + 2u);
+        limit = (sint16)r_u16(0x8002DF1Eu);
+        if (limit < y) goto bad_rectangle;
+        height = (sint16)r_u16(rectangle + 6u);
+        if (limit < y + height || width <= 0 || x < 0 || y < 0 || height <= 0)
+            goto bad_rectangle;
+        return 0u;
     }
-    v14[i] = 0;
-    if ( !moh_draft_missing_call(0x8001ACC8u, moh_draft_local_address(v14, sizeof(v14)), a3) )
-      break;
-    v6 += (unsigned char)((unsigned char *)moh_draft_guest_pointer(0x80037D90u, 1u))[v6];
-    v7 = v6 + 33;
-    if ( !((unsigned char *)moh_draft_guest_pointer(0x80037D90u, 1u))[v6] )
-      goto LABEL_9;
-  }
-  result = v9;
-  *p_a1 = v8;
-  *p_a2 = v9 >> 11;
-  return result;
+    if (level != 2u) return 2u;
+    format = 0x8001488Cu;
+    goto print_rectangle;
+bad_rectangle:
+    format = 0x8001486Cu;
+print_rectangle:
+    moh_draft_indirect_call(r_u32(0x8002DF14u), format, label);
+    x = (sint16)r_u16(rectangle);
+    y = (sint16)r_u16(rectangle + 2u);
+    width = (sint16)r_u16(rectangle + 4u);
+    height = (sint16)r_u16(rectangle + 6u);
+    return moh_draft_indirect_call(r_u32(0x8002DF14u), 0x80014878u,
+        (uint32)x, (uint32)y, (uint32)width, (uint32)height);
 }
 
 /* Unverified draft from full original pseudocode */
-uint32 sub_80016EA0(uint32 a1, uint32 a2)
+uint32 sub_8001ADD8(uint32 sector, uint32 output)
 {
-    /* TODO Memory adapter lifetime, pointer widths and unresolved volatile carriers */
-    short *p_a2 = (short *)moh_draft_guest_pointer(a2, 1u);
-
-  sint32 result; 
-  sint32 v4; 
-  sint32 v5; 
-  sint32 v6; 
-  sint32 v7; 
-
-  if ( (*(unsigned char *)moh_draft_guest_pointer(0x8002DF1Au, sizeof(unsigned char))) != 1 )
-  {
-    result = 2;
-    if ( (*(unsigned char *)moh_draft_guest_pointer(0x8002DF1Au, sizeof(unsigned char))) != 2 )
-      return result;
-    moh_draft_indirect_call((*(uint32 *)moh_draft_guest_pointer(0x8002DF14u, sizeof(uint32))), (const char *)(*(sint32 *)moh_draft_guest_pointer(0x8001488Cu, sizeof(sint32))), a1);
-    return moh_draft_indirect_call((*(uint32 *)moh_draft_guest_pointer(0x8002DF14u, sizeof(uint32))), "(%d,%d)-(%d,%d)\n", *p_a2, p_a2[1], p_a2[2], p_a2[3]);
-  }
-  v4 = p_a2[2];
-  if ( (*(short *)moh_draft_guest_pointer(0x8002DF1Cu, sizeof(short))) < v4
-    || (v5 = *p_a2, (*(short *)moh_draft_guest_pointer(0x8002DF1Cu, sizeof(short))) < v4 + v5)
-    || (v6 = p_a2[1], (*(short *)moh_draft_guest_pointer(0x8002DF1Eu, sizeof(short))) < v6)
-    || (v7 = p_a2[3], (result = (*(short *)moh_draft_guest_pointer(0x8002DF1Eu, sizeof(short))) < v6 + v7) != 0)
-    || v4 <= 0
-    || v5 < 0
-    || v6 < 0
-    || v7 <= 0 )
-  {
-    moh_draft_indirect_call((*(uint32 *)moh_draft_guest_pointer(0x8002DF14u, sizeof(uint32))), "%s:bad RECT", a1);
-    return moh_draft_indirect_call((*(uint32 *)moh_draft_guest_pointer(0x8002DF14u, sizeof(uint32))), "(%d,%d)-(%d,%d)\n", *p_a2, p_a2[1], p_a2[2], p_a2[3]);
-  }
-  return result;
-}
-
-/* Unverified draft from full original pseudocode */
-uint32 sub_8001ADD8(uint32 a1, uint32 a2)
-{
-    /* TODO Memory adapter lifetime, pointer widths and unresolved volatile carriers */
-    unsigned char *p_a2 = (unsigned char *)moh_draft_guest_pointer(a2, 1u);
-
-  sint32 v2; 
-  unsigned char *result; 
-
-  v2 = (sint32)(a1 + 150u);
-  result = p_a2;
-  p_a2[2] = 16 * (v2 % 75 / 10) + v2 % 75 % 10;
-  p_a2[1] = 16 * (v2 / 75 % 60 / 10) + v2 / 75 % 60 % 10;
-  *p_a2 = 16 * (v2 / 75 / 60 / 10) + v2 / 75 / 60 % 10;
-  return a2;
+    sint32 frames = (sint32)(sector + 150u);
+    sint32 seconds = frames / 75;
+    sint32 minutes = seconds / 60;
+    sint32 value = frames % 75;
+    w_u8(output + 2u, (uint32)(16 * (value / 10) + value % 10));
+    value = seconds % 60;
+    w_u8(output + 1u, (uint32)(16 * (value / 10) + value % 10));
+    w_u8(output, (uint32)(16 * (minutes / 10) + minutes % 10));
+    return output;
 }
 
 /* Unverified draft from full original pseudocode */
 uint32 sub_80027AEC(void)
 {
-    /* TODO Memory adapter lifetime, pointer widths and unresolved volatile carriers */
-
-
-  unsigned short *v0; 
-
-  v0 = (unsigned short *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x8003531Cu, sizeof(sint32)))), 1u);
-  if ( !*(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x8003531Cu, sizeof(sint32))) + 440)), 1u) && !*(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x8003531Cu, sizeof(sint32))) + 442)), 1u) )
-  {
-    *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x8003531Cu, sizeof(sint32))) + 384)), 1u) = 0x3FFF;
-    v0[193] = 0x3FFF;
-    v0 = (unsigned short *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x8003531Cu, sizeof(sint32)))), 1u);
-  }
-  v0[216] = 0x3FFF;
-  v0[217] = 0x3FFF;
-  v0[213] = -16383;
-  *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035308u, sizeof(sint32)))), 1u) = 2;
-  *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035318u, sizeof(sint32)))), 1u) = 0x80;
-  *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x8003530Cu, sizeof(sint32)))), 1u) = 0;
-  *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035308u, sizeof(sint32)))), 1u) = 3;
-  *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035314u, sizeof(sint32)))), 1u) = 0x80;
-  *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x80035318u, sizeof(sint32)))), 1u) = 0;
-  *(unsigned char *)moh_draft_guest_pointer((uint32)((*(sint32 *)moh_draft_guest_pointer(0x8003530Cu, sizeof(sint32)))), 1u) = 32;
-  return 0;
+    uint32 base = r_u32(0x8003531Cu);
+    if (!r_u16(base + 440u) && !r_u16(base + 442u))
+    {
+        w_u16(base + 384u, 0x3FFFu);
+        w_u16(base + 386u, 0x3FFFu);
+        base = r_u32(0x8003531Cu);
+    }
+    w_u16(base + 432u, 0x3FFFu);
+    w_u16(base + 434u, 0x3FFFu);
+    w_u16(base + 426u, 0xC001u);
+    w_u8(r_u32(0x80035308u), 2u);
+    w_u8(r_u32(0x80035318u), 128u);
+    w_u8(r_u32(0x8003530Cu), 0u);
+    w_u8(r_u32(0x80035308u), 3u);
+    w_u8(r_u32(0x80035314u), 128u);
+    w_u8(r_u32(0x80035318u), 0u);
+    w_u8(r_u32(0x8003530Cu), 32u);
+    return 0u;
 }
 
 /* Unverified draft from full original pseudocode */
@@ -1297,60 +796,37 @@ uint32 sub_80027DC8(uint32 a1, uint32 a2, uint32 a3, uint32 a4)
 /* Unverified draft from full original pseudocode */
 uint32 sub_80021388(void)
 {
-    /* TODO Memory adapter lifetime, pointer widths and unresolved volatile carriers */
-
-
-  sint32 v0; 
-  uint32 v1; 
-
-  if ( !(*(sint32 *)moh_draft_guest_pointer(0x8003030Cu, sizeof(sint32))) )
-    sub_800218D8();
-  v0 = (*(sint32 *)moh_draft_guest_pointer(0x800302BCu, sizeof(sint32)));
-  *(unsigned short *)moh_draft_guest_pointer((uint32)(((*(sint32 *)moh_draft_guest_pointer(0x800302BCu, sizeof(sint32))) + 426)), 1u) &= 0xFFCFu;
-  if ( (*(unsigned short *)moh_draft_guest_pointer((uint32)((v0 + 426)), 1u) & 0x30) != 0 )
-  {
-    v1 = 1;
-    do
-    {
-      if ( v1 >= 0xF01 )
-        break;
-      ++v1;
-    }
-    while ( (*(unsigned short *)moh_draft_guest_pointer((uint32)((v0 + 426)), 1u) & 0x30) != 0 );
-  }
-  if ( (*(sint32 *)moh_draft_guest_pointer(0x800302F4u, sizeof(sint32))) )
-    return moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x800302F4u, sizeof(sint32))), -268435456);
-  else
-    return moh_draft_missing_call(0x8002A8E0u, -268435447, 32);
+    uint32 base, status, count, callback;
+    if (!r_u32(0x8003030Cu)) sub_800218D8();
+    base = r_u32(0x800302BCu);
+    w_u16(base + 426u, r_u16(base + 426u) & 0xFFCFu);
+    status = r_u16(base + 426u) & 0x30u;
+    for (count = 1u; status && count < 0xF01u; ++count)
+        status = r_u16(base + 426u) & 0x30u;
+    callback = r_u32(0x800302F4u);
+    if (callback)
+        return moh_draft_indirect_call(r_u32(0x800302F4u), 0xF0000000u);
+    return moh_draft_missing_call(0x8002A8E0u, 0xF0000009u, 32u);
 }
 
 /* Unverified draft from full original pseudocode */
-uint32 sub_800253B8(uint32 a1)
+uint32 sub_800253B8(uint32 object)
 {
-    /* TODO Memory adapter lifetime, pointer widths and unresolved volatile carriers */
-
-
-  char v2; 
-  sint32 result; 
-
-  if ( (*(sint32 *)moh_draft_guest_pointer(0x800347B4u, sizeof(sint32))) )
-  {
-    moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x8003474Cu, sizeof(sint32))), *(uint32 *)moh_draft_guest_pointer((uint32)((a1 + 12)), 1u) + 480);
-    moh_draft_indirect_call((*(sint32 *)moh_draft_guest_pointer(0x8003474Cu, sizeof(sint32))), *(uint32 *)moh_draft_guest_pointer((uint32)((a1 + 12)), 1u) + 720);
-  }
-  v2 = 0;
-  if ( !*(unsigned char *)moh_draft_guest_pointer((uint32)((a1 + 55)), 1u) )
-    v2 = (*(sint32 *)moh_draft_guest_pointer(0x80034780u, sizeof(sint32)));
-  result = sub_8002454C(a1, v2);
-  if ( result >= 0 )
-  {
-    (*(sint32 *)moh_draft_guest_pointer(0x800347B0u, sizeof(sint32))) = 2 * (result & 0xF);
-    result = 0;
-    if ( !(*(sint32 *)moh_draft_guest_pointer(0x800347B0u, sizeof(sint32))) )
+    uint32 callback, buffer, mode = 0u, result, units;
+    if (r_u32(0x800347B4u))
     {
-      (*(sint32 *)moh_draft_guest_pointer(0x800347B0u, sizeof(sint32))) = 32;
-      return 0;
+        buffer = r_u32(object + 12u);
+        callback = r_u32(0x8003474Cu);
+        moh_draft_indirect_call(callback, buffer + 480u);
+        buffer = r_u32(object + 12u);
+        callback = r_u32(0x8003474Cu);
+        moh_draft_indirect_call(callback, buffer + 720u);
     }
-  }
-  return result;
+    if (!r_u8(object + 55u)) mode = r_u32(0x80034780u);
+    result = sub_8002454C(object, mode);
+    if ((sint32)result < 0) return result;
+    units = 2u * (result & 15u);
+    w_u32(0x800347B0u, units);
+    if (!units) w_u32(0x800347B0u, 32u);
+    return 0u;
 }

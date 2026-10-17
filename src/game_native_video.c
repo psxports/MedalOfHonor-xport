@@ -1,3 +1,4 @@
+#include "psx.h"
 #include "game_shell_signatures.h"
 #include "psx_press.h"
 #include "psx_stream.h"
